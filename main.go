@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/server"
 	"github.com/shumkovdenis/actor/actors/session"
 	"github.com/shumkovdenis/actor/messages"
@@ -33,7 +34,9 @@ func main() {
 	appIn <- message{
 		Type: "command.subscribe",
 		Data: messages.Subscribe{
-			Topic: "event.login.success",
+			Topics: []string{
+				"event.login.success",
+			},
 		},
 	}
 
@@ -54,16 +57,32 @@ func main() {
 				webIn <- message{
 					Type: "command.subscribe",
 					Data: messages.Subscribe{
-						Topic: "event.login.success",
+						Topics: []string{
+							"event.login.success",
+							"event.account.fail",
+							"event.account.auth.success",
+							"event.account.auth.fail",
+						},
 					},
 				}
 			}
 		case msg := <-webOut:
-			if msg.Type == "event.subscribe.success" {
+			switch msg.Type {
+			case "event.subscribe.success":
 				webIn <- message{
 					Type: "command.login",
 					Data: session.Login{client},
 				}
+			case "event.login.success":
+				webIn <- message{
+					Type: "command.account.auth",
+					Data: account.Auth{"test", "test"},
+				}
+				// case "event.account.auth.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.auth",
+				// 		Data: account.Auth{"test", "test"},
+				// 	}
 			}
 		}
 	}

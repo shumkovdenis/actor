@@ -11,9 +11,9 @@ type Event struct {
 }
 
 type Subscribe struct {
-	Topic string `json:"topic"`
+	Topics []string `json:"topics"`
 }
 
 type Unsubscribe struct {
-	Topic string `json:"topic"`
+	Topics []string `json:"topics"`
 }

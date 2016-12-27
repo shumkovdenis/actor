@@ -5,6 +5,7 @@ import (
 
 	"github.com/AsynkronIT/gam/actor"
 	uuid "github.com/satori/go.uuid"
+	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/client"
 )
 
@@ -20,8 +21,9 @@ type LoginFail struct {
 }
 
 type sessionActor struct {
-	path      string
-	clientPID *actor.PID
+	path       string
+	accountPID *actor.PID
+	clientPID  *actor.PID
 }
 
 func NewActor() actor.Actor {
@@ -49,17 +51,24 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 			ctx.Become(state.App)
 		case "web":
 			ctx.Become(state.Web)
+			props := actor.FromProducer(account.NewActor)
+			state.accountPID = ctx.Spawn(props)
 		}
 	default:
-		state.clientPID.Request(msg, ctx.Parent())
+		//state.clientPID.Request(msg, ctx.Parent())
 	}
 }
 
 func (state *sessionActor) App(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	}
+	// switch msg := ctx.Message().(type) {
+	// default:
+	// 	state.accountPID.Request(msg, ctx.Parent())
+	// }
 }
 
 func (state *sessionActor) Web(ctx actor.Context) {
-
+	switch msg := ctx.Message().(type) {
+	default:
+		state.accountPID.Request(msg, ctx.Parent())
+	}
 }

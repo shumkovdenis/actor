@@ -6,12 +6,13 @@ import (
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
+	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/session"
 	"github.com/shumkovdenis/actor/messages"
 )
 
 type subscription struct {
-	Topic string `json:"topic"`
+	Topics []string `json:"topics"`
 }
 
 type brokerActor struct {
@@ -36,10 +37,10 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 
 		switch cmdMsg := cmdData.(type) {
 		case *messages.Subscribe:
-			evt := state.subscribe(cmdMsg.Topic)
+			evt := state.subscribe(cmdMsg.Topics)
 			ctx.Respond(evt)
 		case *messages.Unsubscribe:
-			evt := state.unsubscribe(cmdMsg.Topic)
+			evt := state.unsubscribe(cmdMsg.Topics)
 			ctx.Respond(evt)
 		default:
 			state.sessionPID.Request(cmdData, ctx.Self())
@@ -52,26 +53,30 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (state *brokerActor) subscribe(topic string) *messages.Event {
-	state.subs.Add(topic)
+func (state *brokerActor) subscribe(topics []string) *messages.Event {
+	for _, topic := range topics {
+		state.subs.Add(topic)
+	}
 
 	evt := &messages.Event{
 		Type: "event.subscribe.success",
 		Data: subscription{
-			Topic: topic,
+			Topics: topics,
 		},
 	}
 
 	return evt
 }
 
-func (state *brokerActor) unsubscribe(topic string) *messages.Event {
-	state.subs.Remove(topic)
+func (state *brokerActor) unsubscribe(topics []string) *messages.Event {
+	for _, topic := range topics {
+		state.subs.Remove(topic)
+	}
 
 	evt := &messages.Event{
 		Type: "event.unsubscribe.success",
 		Data: subscription{
-			Topic: topic,
+			Topics: topics,
 		},
 	}
 
@@ -88,7 +93,10 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &messages.Unsubscribe{}
 	case "command.login":
 		msg = &session.Login{}
-	case "command.auth":
+	case "command.account.auth":
+		msg = &account.Auth{}
+	case "command.account.balance":
+		msg = &account.Balance{}
 	}
 
 	if err := mapstructure.Decode(cmd.Data, msg); err != nil {
@@ -106,6 +114,12 @@ func processMessage(msg interface{}) *messages.Event {
 	switch msg.(type) {
 	case *session.LoginSuccess:
 		evt.Type = "event.login.success"
+	case *account.Fail:
+		evt.Type = "event.account.fail"
+	case *account.AuthSuccess:
+		evt.Type = "event.account.auth.success"
+	case *account.BalanceSuccess:
+		evt.Type = "event.account.balance.success"
 	}
 
 	return evt

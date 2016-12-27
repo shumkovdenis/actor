@@ -2,7 +2,7 @@ package account
 
 import "github.com/AsynkronIT/gam/actor"
 
-type AccountFail struct {
+type Fail struct {
 	Message string `json:"message"`
 }
 
@@ -16,6 +16,13 @@ func NewActor() actor.Actor {
 }
 
 func (state *accountActor) Receive(ctx actor.Context) {
+	switch ctx.Message().(type) {
+	case *actor.Started:
+		ctx.Become(state.started)
+	}
+}
+
+func (state *accountActor) started(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Auth:
 		authMsg := auth(msg)
@@ -24,15 +31,15 @@ func (state *accountActor) Receive(ctx actor.Context) {
 			ctx.Become(state.authorized)
 		}
 	default:
-		ctx.Respond(&AccountFail{"Account is not authorized"})
+		ctx.Respond(&Fail{"Account is not authorized"})
 	}
 }
 
 func (state *accountActor) authorized(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Balance:
-		balance(msg)
+		ctx.Respond(balance(msg))
 	default:
-		ctx.Respond(&AccountFail{"Account already authorized"})
+		ctx.Respond(&Fail{"Account already authorized"})
 	}
 }
