@@ -11,17 +11,15 @@ import (
 	"github.com/shumkovdenis/actor/messages"
 )
 
-type subscription struct {
-	Topics []string `json:"topics"`
-}
-
 type brokerActor struct {
 	subs       *treeset.Set
 	sessionPID *actor.PID
 }
 
 func NewActor() actor.Actor {
-	return &brokerActor{subs: treeset.NewWithStringComparator()}
+	subs := treeset.NewWithStringComparator()
+	subs.Add("event.subscribe.success", "event.unsubscribe.success")
+	return &brokerActor{subs: subs}
 }
 
 func (state *brokerActor) Receive(ctx actor.Context) {
@@ -30,20 +28,16 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		props := actor.FromProducer(session.NewActor)
 		state.sessionPID = ctx.Spawn(props)
 	case *messages.Command:
-		cmdData, err := processCommand(msg)
+		message, err := processCommand(msg)
 		if err != nil {
 			log.Fatalf("%s data decoding error: %v\n", msg.Type, err)
 		}
 
-		switch cmdMsg := cmdData.(type) {
-		case *messages.Subscribe:
-			evt := state.subscribe(cmdMsg.Topics)
-			ctx.Respond(evt)
-		case *messages.Unsubscribe:
-			evt := state.unsubscribe(cmdMsg.Topics)
-			ctx.Respond(evt)
-		default:
-			state.sessionPID.Request(cmdData, ctx.Self())
+		if m := state.subscription(message); m != nil {
+			state.sessionPID.Tell(m)
+			ctx.Self().Tell(m)
+		} else {
+			state.sessionPID.Request(message, ctx.Self())
 		}
 	default:
 		evt := processMessage(msg)
@@ -53,34 +47,20 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (state *brokerActor) subscribe(topics []string) *messages.Event {
-	for _, topic := range topics {
-		state.subs.Add(topic)
+func (state *brokerActor) subscription(message interface{}) interface{} {
+	switch msg := message.(type) {
+	case *messages.Subscribe:
+		for _, topic := range msg.Topics {
+			state.subs.Add(topic)
+		}
+		return &messages.SubscribeSuccess{msg.Topics}
+	case *messages.Unsubscribe:
+		for _, topic := range msg.Topics {
+			state.subs.Remove(topic)
+		}
+		return &messages.UnsubscribeSuccess{msg.Topics}
 	}
-
-	evt := &messages.Event{
-		Type: "event.subscribe.success",
-		Data: subscription{
-			Topics: topics,
-		},
-	}
-
-	return evt
-}
-
-func (state *brokerActor) unsubscribe(topics []string) *messages.Event {
-	for _, topic := range topics {
-		state.subs.Remove(topic)
-	}
-
-	evt := &messages.Event{
-		Type: "event.unsubscribe.success",
-		Data: subscription{
-			Topics: topics,
-		},
-	}
-
-	return evt
+	return nil
 }
 
 func processCommand(cmd *messages.Command) (interface{}, error) {
@@ -118,6 +98,10 @@ func processMessage(msg interface{}) *messages.Event {
 	}
 
 	switch msg.(type) {
+	case *messages.SubscribeSuccess:
+		evt.Type = "event.subscribe.success"
+	case *messages.UnsubscribeSuccess:
+		evt.Type = "event.unsubscribe.success"
 	case *session.LoginSuccess:
 		evt.Type = "event.login.success"
 	case *account.Fail:

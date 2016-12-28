@@ -3,9 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/server"
-	"github.com/shumkovdenis/actor/actors/session"
-	"github.com/shumkovdenis/actor/messages"
 
 	"time"
 
@@ -17,6 +16,9 @@ func main() {
 
 	props := actor.FromProducer(server.New)
 	go actor.Spawn(props)
+
+	props = actor.FromProducer(rates.NewActor)
+	go actor.SpawnNamed(props, "/rates")
 
 	time.Sleep(1 * time.Second)
 
@@ -32,8 +34,8 @@ func main() {
 
 	appIn <- message{
 		Type: "command.subscribe",
-		Data: messages.Subscribe{
-			Topics: []string{
+		Data: map[string]interface{}{
+			"topics": []string{
 				"event.login.success",
 			},
 		},
@@ -48,15 +50,14 @@ func main() {
 			case "event.subscribe.success":
 				appIn <- message{
 					Type: "command.login",
-					Data: session.Login{},
 				}
 			case "event.login.success":
 				data := msg.Data.(map[string]interface{})
 				client = data["client"].(string)
 				webIn <- message{
 					Type: "command.subscribe",
-					Data: messages.Subscribe{
-						Topics: []string{
+					Data: map[string]interface{}{
+						"topics": []string{
 							"event.login.success",
 							"event.account.fail",
 							"event.account.auth.success",
@@ -76,7 +77,9 @@ func main() {
 			case "event.subscribe.success":
 				webIn <- message{
 					Type: "command.login",
-					Data: session.Login{client},
+					Data: map[string]interface{}{
+						"client": client,
+					},
 				}
 			case "event.login.success":
 				webIn <- message{

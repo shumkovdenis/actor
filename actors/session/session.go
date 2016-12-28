@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/client"
+	"github.com/shumkovdenis/actor/messages"
 )
 
 type Login struct {
@@ -32,6 +33,12 @@ func NewActor() actor.Actor {
 
 func (state *sessionActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
+	case *messages.SubscribeSuccess:
+		if msg.Contains("event.rates.change") {
+		}
+	case *messages.UnsubscribeSuccess:
+		if msg.Contains("event.rates.change") {
+		}
 	case *Login:
 		var id = msg.Client
 		if len(strings.TrimSpace(id)) == 0 {
