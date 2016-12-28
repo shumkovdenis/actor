@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/server"
 	"github.com/shumkovdenis/actor/actors/session"
 	"github.com/shumkovdenis/actor/messages"
@@ -19,7 +18,7 @@ func main() {
 	props := actor.FromProducer(server.New)
 	go actor.Spawn(props)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	appIn := make(chan message)
 	appOut := make(chan message)
@@ -62,6 +61,12 @@ func main() {
 							"event.account.fail",
 							"event.account.auth.success",
 							"event.account.auth.fail",
+							"event.account.balance.success",
+							"event.account.balance.fail",
+							"event.account.session.success",
+							"event.account.session.fail",
+							"event.account.withdraw.success",
+							"event.account.withdraw.fail",
 						},
 					},
 				}
@@ -76,13 +81,26 @@ func main() {
 			case "event.login.success":
 				webIn <- message{
 					Type: "command.account.auth",
-					Data: account.Auth{"test", "test"},
+					Data: map[string]interface{}{
+						"account":  "1191100006",
+						"password": "3129",
+					},
 				}
-				// case "event.account.auth.success":
-				// 	webIn <- message{
-				// 		Type: "command.account.auth",
-				// 		Data: account.Auth{"test", "test"},
-				// 	}
+			case "event.account.auth.success":
+				webIn <- message{
+					Type: "command.account.balance",
+				}
+			case "event.account.balance.success":
+				webIn <- message{
+					Type: "command.account.session",
+					Data: map[string]interface{}{
+						"game_id": 83,
+					},
+				}
+			case "event.account.session.success":
+				webIn <- message{
+					Type: "command.account.withdraw",
+				}
 			}
 		}
 	}

@@ -93,10 +93,16 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &messages.Unsubscribe{}
 	case "command.login":
 		msg = &session.Login{}
+	case "command.app.update":
 	case "command.account.auth":
 		msg = &account.Auth{}
 	case "command.account.balance":
 		msg = &account.Balance{}
+	case "command.account.session":
+		msg = &account.Session{}
+	case "command.account.withdraw":
+		msg = &account.Withdraw{}
+	default:
 	}
 
 	if err := mapstructure.Decode(cmd.Data, msg); err != nil {
@@ -118,8 +124,20 @@ func processMessage(msg interface{}) *messages.Event {
 		evt.Type = "event.account.fail"
 	case *account.AuthSuccess:
 		evt.Type = "event.account.auth.success"
+	case *account.AuthFail:
+		evt.Type = "event.account.auth.fail"
 	case *account.BalanceSuccess:
 		evt.Type = "event.account.balance.success"
+	case *account.BalanceFail:
+		evt.Type = "event.account.balance.fail"
+	case *account.SessionSuccess:
+		evt.Type = "event.account.session.success"
+	case *account.SessionFail:
+		evt.Type = "event.account.session.fail"
+	case *account.WithdrawSuccess:
+		evt.Type = "event.account.withdraw.success"
+	case *account.WithdrawFail:
+		evt.Type = "event.account.withdraw.fail"
 	}
 
 	return evt

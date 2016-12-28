@@ -8,11 +8,11 @@ import (
 	"github.com/shumkovdenis/actor/config"
 )
 
-func balance(account, password string) (*BalanceSuccess, error) {
+func withdraw(account, password string) (*WithdrawSuccess, error) {
 	accountAPI := config.Conf.AccountAPI
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   accountAPI.Type + "_CLIENT_BALANCE",
+			"auth_submit":   accountAPI.Type + "_CLIENT_WITHDRAW",
 			"auth_username": account,
 			"auth_password": password,
 		}).
@@ -22,9 +22,8 @@ func balance(account, password string) (*BalanceSuccess, error) {
 	}
 
 	res := &struct {
-		Result  string  `json:"result"`
-		Code    int     `json:"code"`
-		Balance float64 `json:"balance"`
+		Result string `json:"result"`
+		Code   int    `json:"code"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
 		return nil, fmt.Errorf("Unmarshal fail: %s", err)
@@ -34,5 +33,5 @@ func balance(account, password string) (*BalanceSuccess, error) {
 		return nil, fmt.Errorf("Error: %d", res.Code)
 	}
 
-	return &BalanceSuccess{res.Balance}, nil
+	return &WithdrawSuccess{}, nil
 }

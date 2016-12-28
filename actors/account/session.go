@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"strconv"
+
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/actor/config"
 )
 
-func balance(account, password string) (*BalanceSuccess, error) {
+func session(account, password string, gameID int) (*SessionSuccess, error) {
 	accountAPI := config.Conf.AccountAPI
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   accountAPI.Type + "_CLIENT_BALANCE",
+			"auth_submit":   accountAPI.Type + "_CLIENT_SESSION",
 			"auth_username": account,
 			"auth_password": password,
+			"game_id":       strconv.Itoa(gameID),
 		}).
 		Post(accountAPI.URL)
 	if err != nil {
@@ -22,9 +25,11 @@ func balance(account, password string) (*BalanceSuccess, error) {
 	}
 
 	res := &struct {
-		Result  string  `json:"result"`
-		Code    int     `json:"code"`
-		Balance float64 `json:"balance"`
+		Result      string `json:"result"`
+		Code        int    `json:"code"`
+		SessionUUID string `json:"session_uuid"`
+		GameUUID    string `json:"game_uuid"`
+		Host        string `json:"host"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
 		return nil, fmt.Errorf("Unmarshal fail: %s", err)
@@ -34,5 +39,5 @@ func balance(account, password string) (*BalanceSuccess, error) {
 		return nil, fmt.Errorf("Error: %d", res.Code)
 	}
 
-	return &BalanceSuccess{res.Balance}, nil
+	return &SessionSuccess{res.SessionUUID, res.GameUUID, res.Host}, nil
 }
