@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/actor/actors/account"
 	"github.com/shumkovdenis/actor/actors/client"
+	"github.com/shumkovdenis/actor/actors/group"
 	"github.com/shumkovdenis/actor/messages"
 )
 
@@ -35,6 +36,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *messages.SubscribeSuccess:
 		if msg.Contains("event.rates.change") {
+			pid := actor.NewLocalPID("/rates")
+			pid.Tell(&group.Join{Consumer: ctx.Self()})
 		}
 	case *messages.UnsubscribeSuccess:
 		if msg.Contains("event.rates.change") {

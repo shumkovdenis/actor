@@ -1,26 +1,38 @@
 package main
 
 import (
+	"crypto/tls"
 	"log"
 
+	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/server"
 
 	"time"
 
 	"github.com/AsynkronIT/gam/actor"
+	"github.com/shumkovdenis/actor/actors/group"
 )
 
 func main() {
+	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+
 	log.SetFlags(0)
 
 	props := actor.FromProducer(server.New)
 	go actor.Spawn(props)
 
-	props = actor.FromProducer(rates.NewActor)
+	time.Sleep(200 * time.Millisecond)
+
+	props = actor.FromProducer(group.NewActor)
 	go actor.SpawnNamed(props, "/rates")
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(200 * time.Millisecond)
+
+	props = actor.FromInstance(rates.NewActor(actor.NewLocalPID("/rates")))
+	go actor.Spawn(props)
+
+	time.Sleep(200 * time.Millisecond)
 
 	appIn := make(chan message)
 	appOut := make(chan message)
@@ -68,6 +80,7 @@ func main() {
 							"event.account.session.fail",
 							"event.account.withdraw.success",
 							"event.account.withdraw.fail",
+							"event.rates.change",
 						},
 					},
 				}
@@ -81,29 +94,29 @@ func main() {
 						"client": client,
 					},
 				}
-			case "event.login.success":
-				webIn <- message{
-					Type: "command.account.auth",
-					Data: map[string]interface{}{
-						"account":  "1191100006",
-						"password": "3129",
-					},
-				}
-			case "event.account.auth.success":
-				webIn <- message{
-					Type: "command.account.balance",
-				}
-			case "event.account.balance.success":
-				webIn <- message{
-					Type: "command.account.session",
-					Data: map[string]interface{}{
-						"game_id": 83,
-					},
-				}
-			case "event.account.session.success":
-				webIn <- message{
-					Type: "command.account.withdraw",
-				}
+				// case "event.login.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.auth",
+				// 		Data: map[string]interface{}{
+				// 			"account":  "1191100006",
+				// 			"password": "3129",
+				// 		},
+				// 	}
+				// case "event.account.auth.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.balance",
+				// 	}
+				// case "event.account.balance.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.session",
+				// 		Data: map[string]interface{}{
+				// 			"game_id": 83,
+				// 		},
+				// 	}
+				// case "event.account.session.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.withdraw",
+				// 	}
 			}
 		}
 	}

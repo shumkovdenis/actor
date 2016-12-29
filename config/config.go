@@ -18,7 +18,7 @@ type config struct {
 // Conf server
 var Conf = config{
 	AccountAPI: accountAPI{
-		URL:  "http://stage.silver-pay.com/auth/clientjson",
+		URL:  "https://silver-pay.com/auth/clientjson",
 		Type: "BINOPT",
 	},
 	RatesAPI: ratesAPI{
