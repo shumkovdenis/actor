@@ -1,13 +1,18 @@
 package group
 
 import (
+	"reflect"
+
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/emirpasic/gods/sets/hashset"
 )
 
 type Use struct {
-	Producer  *actor.PID
-	Validator ValidateMessageFunc
+	Producer *actor.PID
+	Types    []interface{}
+}
+
+type Used struct {
 }
 
 type Join struct {
@@ -26,44 +31,52 @@ type Left struct {
 	Consumer *actor.PID
 }
 
-type ValidateMessageFunc func(msg interface{}) bool
-
 type groupActor struct {
-	producer  *actor.PID
+	producers *hashset.Set
 	consumers *hashset.Set
-	validator ValidateMessageFunc
+	types     *hashset.Set
 }
 
 func NewActor() actor.Actor {
-	return &groupActor{consumers: hashset.New()}
+	return &groupActor{
+		producers: hashset.New(),
+		consumers: hashset.New(),
+		types:     hashset.New(),
+	}
 }
 
 func (state *groupActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Use:
-		state.producer = msg.Producer
-		state.validator = msg.Validator
-		ctx.Become(state.used)
+		state.producers.Add(msg.Producer)
+		for _, t := range msg.Types {
+			state.types.Add(t)
+		}
+		ctx.Respond(&Used{})
+	case *Join:
+		state.consumers.Add(msg.Consumer)
+		state.tellProducers(&Joined{msg.Consumer})
+	case *Leave:
+		state.consumers.Remove(msg.Consumer)
+		state.tellProducers(&Left{msg.Consumer})
+	default:
+		state.tellConsumers(msg)
 	}
 }
 
-func (state *groupActor) used(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	case *Join:
-		state.consumers.Add(msg.Consumer)
-		if state.producer != nil {
-			state.producer.Tell(&Joined{msg.Consumer})
-		}
-	case *Leave:
-		state.consumers.Remove(msg.Consumer)
-		if state.producer != nil {
-			state.producer.Tell(&Left{msg.Consumer})
-		}
-	default:
-		if state.validator(msg) {
+func (state *groupActor) tellProducers(msg interface{}) {
+	for _, producer := range state.producers.Values() {
+		producer.(*actor.PID).Tell(msg)
+	}
+}
+
+func (state *groupActor) tellConsumers(msg interface{}) {
+	for _, t := range state.types.Values() {
+		if reflect.TypeOf(msg).AssignableTo(reflect.TypeOf(t)) {
 			for _, consumer := range state.consumers.Values() {
 				consumer.(*actor.PID).Tell(msg)
 			}
+			break
 		}
 	}
 }

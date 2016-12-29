@@ -3,15 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"log"
-
-	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/actors/rates"
-	"github.com/shumkovdenis/actor/actors/server"
-
 	"time"
 
 	"github.com/AsynkronIT/gam/actor"
+	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/actor/actors/group"
+	"github.com/shumkovdenis/actor/actors/rates"
+	"github.com/shumkovdenis/actor/actors/server"
 )
 
 func main() {
@@ -121,9 +119,17 @@ func main() {
 				webIn <- message{
 					Type: "command.account.withdraw",
 				}
+				// case "event.account.withdraw.success":
+				// 	time.Sleep(10 * time.Second)
+				// 	webIn <- message{
+				// 		Type: "command.unsubscribe",
+				// 		Data: map[string]interface{}{
+				// 			"topics": []string{
+				// 				"event.rates.change",
+				// 			},
+				// 		},
+				// 	}
 			}
 		}
 	}
-
-	//console.ReadLine()
 }

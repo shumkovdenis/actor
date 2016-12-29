@@ -30,10 +30,13 @@ func NewActor(listener *actor.PID) actor.Actor {
 func (state *ratesActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		state.listener.Tell(&group.Use{
-			Producer:  ctx.Self(),
-			Validator: validator,
-		})
+		state.listener.Request(&group.Use{
+			Producer: ctx.Self(),
+			Types: []interface{}{
+				&Change{},
+				&Fail{},
+			},
+		}, ctx.Self())
 		ctx.Become(state.started)
 	}
 }
