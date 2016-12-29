@@ -71,6 +71,9 @@ func main() {
 					Data: map[string]interface{}{
 						"topics": []string{
 							"event.login.success",
+							"event.login.fail",
+							"event.join.success",
+							"event.join.fail",
 							"event.account.fail",
 							"event.account.auth.success",
 							"event.account.auth.fail",
@@ -81,6 +84,7 @@ func main() {
 							"event.account.withdraw.success",
 							"event.account.withdraw.fail",
 							"event.rates.change",
+							"event.rates.fail",
 						},
 					},
 				}
@@ -89,34 +93,34 @@ func main() {
 			switch msg.Type {
 			case "event.subscribe.success":
 				webIn <- message{
-					Type: "command.login",
+					Type: "command.join",
 					Data: map[string]interface{}{
 						"client": client,
 					},
 				}
-				// case "event.login.success":
-				// 	webIn <- message{
-				// 		Type: "command.account.auth",
-				// 		Data: map[string]interface{}{
-				// 			"account":  "1191100006",
-				// 			"password": "3129",
-				// 		},
-				// 	}
-				// case "event.account.auth.success":
-				// 	webIn <- message{
-				// 		Type: "command.account.balance",
-				// 	}
-				// case "event.account.balance.success":
-				// 	webIn <- message{
-				// 		Type: "command.account.session",
-				// 		Data: map[string]interface{}{
-				// 			"game_id": 83,
-				// 		},
-				// 	}
-				// case "event.account.session.success":
-				// 	webIn <- message{
-				// 		Type: "command.account.withdraw",
-				// 	}
+			case "event.join.success":
+				webIn <- message{
+					Type: "command.account.auth",
+					Data: map[string]interface{}{
+						"account":  "1191100006",
+						"password": "3129",
+					},
+				}
+			case "event.account.auth.success":
+				webIn <- message{
+					Type: "command.account.balance",
+				}
+			case "event.account.balance.success":
+				webIn <- message{
+					Type: "command.account.session",
+					Data: map[string]interface{}{
+						"game_id": 83,
+					},
+				}
+			case "event.account.session.success":
+				webIn <- message{
+					Type: "command.account.withdraw",
+				}
 			}
 		}
 	}

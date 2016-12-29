@@ -7,6 +7,7 @@ import (
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
 	"github.com/shumkovdenis/actor/actors/account"
+	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/session"
 	"github.com/shumkovdenis/actor/messages"
 )
@@ -73,7 +74,8 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &messages.Unsubscribe{}
 	case "command.login":
 		msg = &session.Login{}
-	case "command.app.update":
+	case "command.join":
+		msg = &session.Join{}
 	case "command.account.auth":
 		msg = &account.Auth{}
 	case "command.account.balance":
@@ -104,6 +106,12 @@ func processMessage(msg interface{}) *messages.Event {
 		evt.Type = "event.unsubscribe.success"
 	case *session.LoginSuccess:
 		evt.Type = "event.login.success"
+	case *session.LoginFail:
+		evt.Type = "event.login.fail"
+	case *session.JoinSuccess:
+		evt.Type = "event.join.success"
+	case *session.JoinFail:
+		evt.Type = "event.join.fail"
 	case *account.Fail:
 		evt.Type = "event.account.fail"
 	case *account.AuthSuccess:
@@ -122,6 +130,10 @@ func processMessage(msg interface{}) *messages.Event {
 		evt.Type = "event.account.withdraw.success"
 	case *account.WithdrawFail:
 		evt.Type = "event.account.withdraw.fail"
+	case *rates.Change:
+		evt.Type = "event.rates.change"
+	case *rates.Fail:
+		evt.Type = "event.rates.fail"
 	}
 
 	return evt

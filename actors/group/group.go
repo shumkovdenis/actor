@@ -51,10 +51,14 @@ func (state *groupActor) used(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Join:
 		state.consumers.Add(msg.Consumer)
-		state.producer.Tell(&Joined{msg.Consumer})
+		if state.producer != nil {
+			state.producer.Tell(&Joined{msg.Consumer})
+		}
 	case *Leave:
 		state.consumers.Remove(msg.Consumer)
-		state.producer.Tell(&Left{msg.Consumer})
+		if state.producer != nil {
+			state.producer.Tell(&Left{msg.Consumer})
+		}
 	default:
 		if state.validator(msg) {
 			for _, consumer := range state.consumers.Values() {
