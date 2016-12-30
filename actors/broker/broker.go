@@ -7,6 +7,7 @@ import (
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
 	"github.com/shumkovdenis/actor/actors/account"
+	"github.com/shumkovdenis/actor/actors/app/update"
 	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/session"
 	"github.com/shumkovdenis/actor/messages"
@@ -76,6 +77,8 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &session.Login{}
 	case "command.join":
 		msg = &session.Join{}
+	case "command.app.update.check":
+		msg = &update.Check{}
 	case "command.account.auth":
 		msg = &account.Auth{}
 	case "command.account.balance":
@@ -112,6 +115,20 @@ func processMessage(msg interface{}) *messages.Event {
 		evt.Type = "event.join.success"
 	case *session.JoinFail:
 		evt.Type = "event.join.fail"
+	case *update.No:
+		evt.Type = "event.app.update.no"
+	case *update.Available:
+		evt.Type = "event.app.update.available"
+	case *update.Download:
+		evt.Type = "event.app.update.download"
+	case *update.Ready:
+		evt.Type = "event.app.update.ready"
+	case *update.Install:
+		evt.Type = "event.app.update.install"
+	case *update.Restart:
+		evt.Type = "event.app.update.restart"
+	case *update.Fail:
+		evt.Type = "event.app.update.fail"
 	case *account.Fail:
 		evt.Type = "event.account.fail"
 	case *account.AuthSuccess:

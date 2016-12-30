@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>App</title>
+</head>
+
+<body>
+    <div id="control"></div>
+    <p id="output"></p>
+
+    <script>
+        var loc = window.location;
+        var uri = 'ws:';
+
+        if (loc.protocol === 'https:') {
+            uri = 'wss:';
+        }
+        uri += '//' + loc.host + '/ws';
+
+        ws = new WebSocket(uri);
+
+        ws.onopen = function () {
+            console.log('Connected');
+            ws.send(JSON.stringify({
+                type: "command.subscribe",
+                data: {
+                    topics: [
+                        "event.login.success",
+                        "event.app.update.no",
+                        "event.app.update.available",
+                        "event.app.update.ready",
+                        "event.app.update.fail",
+                    ],
+                },
+            }));
+        }
+
+        ws.onmessage = function (evt) {
+            var out = document.getElementById('output');
+            out.innerHTML += evt.data + '<br>';
+        }
+
+        // setInterval(function () {
+        //     ws.send('Hello, Server!');
+        // }, 1000);
+    </script>
+</body>
+
+</html>

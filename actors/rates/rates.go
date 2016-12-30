@@ -63,11 +63,3 @@ func (state *ratesActor) request() {
 		state.listener.Tell(&Change{})
 	}
 }
-
-func validator(msg interface{}) bool {
-	switch msg.(type) {
-	case *Change, *Fail:
-		return true
-	}
-	return false
-}

@@ -50,17 +50,20 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 	state.subscription(ctx)
 
 	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+		pid := actor.NewLocalPID("/update")
+		pid.Tell(&group.Join{Consumer: ctx.Parent()})
 	case *Login:
 		state.client = uuid.NewV4().String()
 
 		props := actor.FromProducer(group.NewActor)
-		state.clientPID = actor.SpawnNamed(props, "clients/"+state.client)
+		state.clientPID = actor.SpawnNamed(props, "/clients/"+state.client)
 
 		ctx.Become(state.use)
 
 		state.clientPID.Request(&group.Use{Producer: ctx.Self()}, ctx.Self())
 	case *Join:
-		state.clientPID = actor.NewLocalPID("clients/" + msg.Client)
+		state.clientPID = actor.NewLocalPID("/clients/" + msg.Client)
 
 		ctx.Become(state.use)
 

@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/gam/actor"
+	console "github.com/AsynkronIT/goconsole"
 	"github.com/go-resty/resty"
+	"github.com/shumkovdenis/actor/actors/app/update"
 	"github.com/shumkovdenis/actor/actors/group"
 	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/server"
@@ -28,6 +30,16 @@ func main() {
 	time.Sleep(200 * time.Millisecond)
 
 	props = actor.FromInstance(rates.NewActor(actor.NewLocalPID("/rates")))
+	go actor.Spawn(props)
+
+	time.Sleep(200 * time.Millisecond)
+
+	props = actor.FromProducer(group.NewActor)
+	go actor.SpawnNamed(props, "/update")
+
+	time.Sleep(200 * time.Millisecond)
+
+	props = actor.FromInstance(update.NewActor(actor.NewLocalPID("/update")))
 	go actor.Spawn(props)
 
 	time.Sleep(200 * time.Millisecond)
@@ -72,6 +84,10 @@ func main() {
 							"event.login.fail",
 							"event.join.success",
 							"event.join.fail",
+							"event.app.update.no",
+							"event.app.update.available",
+							"event.app.update.ready",
+							"event.app.update.fail",
 							"event.account.fail",
 							"event.account.auth.success",
 							"event.account.auth.fail",
@@ -81,8 +97,8 @@ func main() {
 							"event.account.session.fail",
 							"event.account.withdraw.success",
 							"event.account.withdraw.fail",
-							"event.rates.change",
-							"event.rates.fail",
+							// "event.rates.change",
+							// "event.rates.fail",
 						},
 					},
 				}
@@ -96,29 +112,29 @@ func main() {
 						"client": client,
 					},
 				}
-			case "event.join.success":
-				webIn <- message{
-					Type: "command.account.auth",
-					Data: map[string]interface{}{
-						"account":  "1191100006",
-						"password": "3129",
-					},
-				}
-			case "event.account.auth.success":
-				webIn <- message{
-					Type: "command.account.balance",
-				}
-			case "event.account.balance.success":
-				webIn <- message{
-					Type: "command.account.session",
-					Data: map[string]interface{}{
-						"game_id": 83,
-					},
-				}
-			case "event.account.session.success":
-				webIn <- message{
-					Type: "command.account.withdraw",
-				}
+				// case "event.join.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.auth",
+				// 		Data: map[string]interface{}{
+				// 			"account":  "1191100006",
+				// 			"password": "3129",
+				// 		},
+				// 	}
+				// case "event.account.auth.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.balance",
+				// 	}
+				// case "event.account.balance.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.session",
+				// 		Data: map[string]interface{}{
+				// 			"game_id": 83,
+				// 		},
+				// 	}
+				// case "event.account.session.success":
+				// 	webIn <- message{
+				// 		Type: "command.account.withdraw",
+				// 	}
 				// case "event.account.withdraw.success":
 				// 	time.Sleep(10 * time.Second)
 				// 	webIn <- message{
@@ -132,4 +148,6 @@ func main() {
 			}
 		}
 	}
+
+	console.ReadLine()
 }

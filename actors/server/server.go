@@ -30,6 +30,7 @@ func (state *serverActor) start(ctx actor.Context) {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Static("/", "public")
 	e.GET("/ws", state.handler(ctx))
 	e.Logger.Fatal(e.Start(":8282"))
 }
