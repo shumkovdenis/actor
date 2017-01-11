@@ -5,8 +5,10 @@ import (
 
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/config"
+	"github.com/shumkovdenis/actor/manifest"
 )
+
+// var logger = actor.ActorLogger("rates")
 
 // Change -> event.rates.change
 type Change struct {
@@ -18,13 +20,20 @@ type Fail struct {
 }
 
 type ratesActor struct {
-	listener *actor.PID
-	members  int
-	ticker   *time.Ticker
+	urlAPI      string
+	getInterval time.Duration
+	listener    *actor.PID
+	members     int
+	ticker      *time.Ticker
 }
 
-func NewActor(listener *actor.PID) actor.Actor {
-	return &ratesActor{listener: listener}
+func New(listener *actor.PID) actor.Actor {
+	conf := manifest.Get().Config.RatesAPI
+	return &ratesActor{
+		urlAPI:      conf.URL,
+		getInterval: conf.GetInterval,
+		listener:    listener,
+	}
 }
 
 func (state *ratesActor) Receive(ctx actor.Context) {
@@ -57,8 +66,7 @@ func (state *ratesActor) started(ctx actor.Context) {
 }
 
 func (state *ratesActor) request() {
-	ratesAPI := config.Conf.RatesAPI
-	state.ticker = time.NewTicker(time.Duration(ratesAPI.Timeout) * time.Millisecond)
+	state.ticker = time.NewTicker(state.getInterval)
 	for _ = range state.ticker.C {
 		state.listener.Tell(&Change{})
 	}

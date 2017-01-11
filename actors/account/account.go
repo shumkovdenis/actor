@@ -1,6 +1,9 @@
 package account
 
-import "github.com/AsynkronIT/gam/actor"
+import (
+	"github.com/AsynkronIT/gam/actor"
+	"github.com/shumkovdenis/actor/manifest"
+)
 
 // Auth -> command.account.auth
 type Auth struct {
@@ -68,12 +71,18 @@ type Fail struct {
 }
 
 type accountActor struct {
+	urlAPI   string
+	typeAPI  string
 	account  string
 	password string
 }
 
 func NewActor() actor.Actor {
-	return &accountActor{}
+	conf := manifest.Get().Config.AccountAPI
+	return &accountActor{
+		urlAPI:  conf.URL,
+		typeAPI: conf.Type,
+	}
 }
 
 func (state *accountActor) Receive(ctx actor.Context) {
@@ -86,7 +95,7 @@ func (state *accountActor) Receive(ctx actor.Context) {
 func (state *accountActor) started(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Auth:
-		success, err := auth(msg.Account, msg.Password)
+		success, err := state.auth(msg.Account, msg.Password)
 		if err != nil {
 			ctx.Respond(&AuthFail{err.Error()})
 			return
@@ -95,7 +104,7 @@ func (state *accountActor) started(ctx actor.Context) {
 		state.password = msg.Password
 		ctx.Respond(success)
 		ctx.Become(state.authorized)
-	default:
+	case *Balance, *Session, *Withdraw:
 		ctx.Respond(&Fail{"Account is not authorized"})
 	}
 }
@@ -103,28 +112,28 @@ func (state *accountActor) started(ctx actor.Context) {
 func (state *accountActor) authorized(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Balance:
-		success, err := balance(state.account, state.password)
+		success, err := state.balance()
 		if err != nil {
 			ctx.Respond(&BalanceFail{err.Error()})
 			return
 		}
 		ctx.Respond(success)
 	case *Session:
-		success, err := session(state.account, state.password, msg.GameID)
+		success, err := state.session(msg.GameID)
 		if err != nil {
 			ctx.Respond(&SessionFail{err.Error()})
 			return
 		}
 		ctx.Respond(success)
 	case *Withdraw:
-		success, err := withdraw(state.account, state.password)
+		success, err := state.withdraw()
 		if err != nil {
 			ctx.Respond(&WithdrawFail{err.Error()})
 			return
 		}
 		ctx.Respond(success)
 		ctx.Become(state.started)
-	default:
+	case *Auth:
 		ctx.Respond(&Fail{"Account already authorized"})
 	}
 }

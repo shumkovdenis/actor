@@ -10,7 +10,7 @@ import (
 	"github.com/cavaliercoder/grab"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/config"
+	"github.com/shumkovdenis/actor/manifest"
 )
 
 // Check -> command.app.update.check
@@ -27,6 +27,7 @@ type Available struct {
 
 // Download -> event.app.update.download
 type Download struct {
+	Progress float64 `json:"progress"`
 }
 
 // Ready -> event.app.update.ready
@@ -47,11 +48,20 @@ type Fail struct {
 }
 
 type updateActor struct {
-	listener *actor.PID
+	checkURL      string
+	checkInterval time.Duration
+	downloadURL   string
+	listener      *actor.PID
 }
 
 func NewActor(listener *actor.PID) actor.Actor {
-	return &updateActor{listener}
+	m := manifest.Get()
+	return &updateActor{
+		checkURL:      m.Config.UpdateServer.URL + "/" + m.Version,
+		checkInterval: m.Config.UpdateServer.CheckInterval,
+		downloadURL:   m.Config.UpdateServer.URL + "/" + m.Version + ".zip",
+		listener:      listener,
+	}
 }
 
 func (state *updateActor) Receive(ctx actor.Context) {
@@ -75,26 +85,44 @@ func (state *updateActor) Receive(ctx actor.Context) {
 }
 
 func (state *updateActor) checkUpdateLoop() {
-	updateServer := config.Conf.UpdateServer
-	ticker := time.Tick(time.Duration(updateServer.UpdateInterval) * time.Millisecond)
+	ticker := time.Tick(state.checkInterval)
 	for _ = range ticker {
-		ok, err := checkUpdate()
+		ok, err := state.checkUpdate()
 		if err != nil {
 			state.listener.Tell(&Fail{err.Error()})
 			continue
 		}
 		if ok {
 			state.listener.Tell(&Available{})
+
+			respch, err := grab.GetAsync(".", state.downloadURL)
+			if err != nil {
+				state.listener.Tell(&Fail{err.Error()})
+				continue
+			}
+
+			resp := <-respch
+
+			for !resp.IsComplete() {
+				state.listener.Tell(&Download{resp.Progress()})
+				time.Sleep(200 * time.Millisecond)
+			}
+
+			if resp.Error != nil {
+				state.listener.Tell(&Fail{resp.Error.Error()})
+				continue
+			}
+
+			state.listener.Tell(&Ready{})
 		} else {
 			state.listener.Tell(&No{})
 		}
 	}
 }
 
-func checkUpdate() (bool, error) {
-	conf := config.Conf
+func (state *updateActor) checkUpdate() (bool, error) {
 	resp, err := resty.R().
-		Get(conf.UpdateServer.URL + "/" + conf.Version)
+		Get(state.checkURL)
 	if err != nil {
 		return false, fmt.Errorf("Request fail: %s", err)
 	}
@@ -107,12 +135,4 @@ func checkUpdate() (bool, error) {
 	default:
 		return false, fmt.Errorf("Status code: %d", resp.StatusCode())
 	}
-}
-
-func download() <-chan *grab.Response {
-	respch, err := grab.GetAsync(".", conf.UpdateServer.URL+"/"+conf.Version+".zip")
-	if err != nil {
-
-	}
-	return respch
 }

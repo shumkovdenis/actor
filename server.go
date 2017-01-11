@@ -1,19 +1,43 @@
-package main
+package actor
 
 import (
 	"crypto/tls"
-	"log"
-	"time"
 
 	"github.com/AsynkronIT/gam/actor"
-	console "github.com/AsynkronIT/goconsole"
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/actors/app/update"
 	"github.com/shumkovdenis/actor/actors/group"
 	"github.com/shumkovdenis/actor/actors/rates"
 	"github.com/shumkovdenis/actor/actors/server"
 )
 
+func StartServer() error {
+	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+
+	props := actor.FromProducer(group.NewActor)
+	pid := actor.SpawnNamed(props, "/rates")
+
+	props = actor.FromInstance(rates.New(pid))
+	actor.Spawn(props)
+
+	props = actor.FromProducer(server.New)
+	actor.Spawn(props)
+
+	return nil
+}
+
+// func main() {
+// if err := app.ReadInfo(); err != nil {
+// 	logger.Fatal(err.Error())
+// }
+
+// if err := app.ReadConfig(); err != nil {
+// 	logger.Fatal(err.Error())
+// }
+
+// logger.Info("Run.")
+// }
+
+/*
 func main() {
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
@@ -86,7 +110,10 @@ func main() {
 							"event.join.fail",
 							"event.app.update.no",
 							"event.app.update.available",
+							"event.app.update.download",
 							"event.app.update.ready",
+							"event.app.update.install",
+							"event.app.update.restart",
 							"event.app.update.fail",
 							"event.account.fail",
 							"event.account.auth.success",
@@ -151,3 +178,4 @@ func main() {
 
 	console.ReadLine()
 }
+*/

@@ -7,19 +7,17 @@ import (
 	"strconv"
 
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/config"
 )
 
-func session(account, password string, gameID int) (*SessionSuccess, error) {
-	accountAPI := config.Conf.AccountAPI
+func (state *accountActor) session(gameID int) (*SessionSuccess, error) {
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   accountAPI.Type + "_CLIENT_SESSION",
-			"auth_username": account,
-			"auth_password": password,
+			"auth_submit":   state.typeAPI + "_CLIENT_SESSION",
+			"auth_username": state.account,
+			"auth_password": state.password,
 			"game_id":       strconv.Itoa(gameID),
 		}).
-		Post(accountAPI.URL)
+		Post(state.urlAPI)
 	if err != nil {
 		return nil, fmt.Errorf("Request fail: %s", err)
 	}

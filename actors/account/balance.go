@@ -5,18 +5,16 @@ import (
 	"fmt"
 
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/config"
 )
 
-func balance(account, password string) (*BalanceSuccess, error) {
-	accountAPI := config.Conf.AccountAPI
+func (state *accountActor) balance() (*BalanceSuccess, error) {
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   accountAPI.Type + "_CLIENT_BALANCE",
-			"auth_username": account,
-			"auth_password": password,
+			"auth_submit":   state.typeAPI + "_CLIENT_BALANCE",
+			"auth_username": state.account,
+			"auth_password": state.password,
 		}).
-		Post(accountAPI.URL)
+		Post(state.urlAPI)
 	if err != nil {
 		return nil, fmt.Errorf("Request fail: %s", err)
 	}
