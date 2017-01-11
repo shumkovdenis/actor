@@ -1,13 +1,15 @@
 package conn
 
 import (
-	"log"
-
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/gorilla/websocket"
-	"github.com/shumkovdenis/actor/actors/broker"
-	"github.com/shumkovdenis/actor/messages"
+	"github.com/shumkovdenis/club/actors/broker"
+	"github.com/shumkovdenis/club/logger"
+	"github.com/shumkovdenis/club/messages"
+	"github.com/uber-go/zap"
 )
+
+var log = logger.Get()
 
 type connActor struct {
 	ws        *websocket.Conn
@@ -29,8 +31,10 @@ func (state *connActor) Receive(ctx actor.Context) {
 	case *messages.Event:
 		err := state.ws.WriteJSON(msg)
 		if err != nil {
-			log.Fatalf("write error: %s", err)
+			log.Error("write error", zap.Error(err))
 		}
+
+		log.Debug("event", zap.String("type", msg.Type))
 	}
 }
 
@@ -39,8 +43,12 @@ func (state *connActor) reader(ctx actor.Context) {
 	for {
 		cmd := &messages.Command{}
 		if err := state.ws.ReadJSON(cmd); err != nil {
-			log.Fatalf("read error: %s\n", err)
+			log.Error("read error", zap.Error(err))
+			return
 		}
+
+		log.Debug("command", zap.String("type", cmd.Type))
+
 		state.brokerPID.Request(cmd, ctx.Self())
 	}
 }

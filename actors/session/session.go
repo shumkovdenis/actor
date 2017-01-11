@@ -3,9 +3,9 @@ package session
 import (
 	"github.com/AsynkronIT/gam/actor"
 	uuid "github.com/satori/go.uuid"
-	"github.com/shumkovdenis/actor/actors/account"
-	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/messages"
+	"github.com/shumkovdenis/club/actors/account"
+	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/messages"
 )
 
 // Login -> command.login
@@ -51,8 +51,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		pid := actor.NewLocalPID("/update")
-		pid.Tell(&group.Join{Consumer: ctx.Parent()})
+		// pid := actor.NewLocalPID("/update")
+		// pid.Tell(&group.Join{Consumer: ctx.Parent()})
 	case *Login:
 		state.client = uuid.NewV4().String()
 

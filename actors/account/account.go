@@ -2,7 +2,7 @@ package account
 
 import (
 	"github.com/AsynkronIT/gam/actor"
-	"github.com/shumkovdenis/actor/manifest"
+	"github.com/shumkovdenis/club/manifest"
 )
 
 // Auth -> command.account.auth

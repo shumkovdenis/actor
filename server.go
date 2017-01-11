@@ -1,13 +1,13 @@
-package actor
+package club
 
 import (
 	"crypto/tls"
 
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/actors/rates"
-	"github.com/shumkovdenis/actor/actors/server"
+	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/actors/rates"
+	"github.com/shumkovdenis/club/actors/server"
 )
 
 func StartServer() error {

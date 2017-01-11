@@ -9,8 +9,8 @@ import (
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/cavaliercoder/grab"
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/manifest"
+	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/manifest"
 )
 
 // Check -> command.app.update.check

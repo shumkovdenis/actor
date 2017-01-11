@@ -6,11 +6,11 @@ import (
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
-	"github.com/shumkovdenis/actor/actors/account"
-	"github.com/shumkovdenis/actor/actors/app/update"
-	"github.com/shumkovdenis/actor/actors/rates"
-	"github.com/shumkovdenis/actor/actors/session"
-	"github.com/shumkovdenis/actor/messages"
+	"github.com/shumkovdenis/club/actors/account"
+	"github.com/shumkovdenis/club/actors/app/update"
+	"github.com/shumkovdenis/club/actors/rates"
+	"github.com/shumkovdenis/club/actors/session"
+	"github.com/shumkovdenis/club/messages"
 )
 
 type brokerActor struct {

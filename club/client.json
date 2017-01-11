@@ -1,0 +1,19 @@
+{
+    "states": {
+        "#start": {
+            "type": "command.subscribe",
+            "data": {
+                "topics": [
+                    "event.login.success"
+                ]
+            }
+        },
+        "#login": {
+            "type": "command.login",
+            "data": {}
+        }
+    },
+    "events": {
+        "event.subscribe.success": "#login"
+    }
+}

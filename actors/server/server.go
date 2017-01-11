@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/shumkovdenis/actor/actors/conn"
+	"github.com/shumkovdenis/club/actors/conn"
 )
 
 type serverActor struct {

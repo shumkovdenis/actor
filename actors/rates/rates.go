@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/gam/actor"
-	"github.com/shumkovdenis/actor/actors/group"
-	"github.com/shumkovdenis/actor/manifest"
+	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/logger"
+	"github.com/shumkovdenis/club/manifest"
 )
 
-// var logger = actor.ActorLogger("rates")
+var log = logger.Get()
 
 // Change -> event.rates.change
 type Change struct {
@@ -46,7 +47,10 @@ func (state *ratesActor) Receive(ctx actor.Context) {
 				&Fail{},
 			},
 		}, ctx.Self())
+
 		ctx.Become(state.started)
+
+		log.Info("start rates")
 	}
 }
 
@@ -69,5 +73,7 @@ func (state *ratesActor) request() {
 	state.ticker = time.NewTicker(state.getInterval)
 	for _ = range state.ticker.C {
 		state.listener.Tell(&Change{})
+
+		log.Debug("rates change")
 	}
 }
