@@ -28,6 +28,10 @@ func Get() *Manifest {
 	return m
 }
 
+func Read() error {
+	return nil
+}
+
 func ReadConfig(path string) error {
 	if len(strings.TrimSpace(path)) == 0 {
 		return errors.New("must specify path to config file")

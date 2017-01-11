@@ -5,6 +5,7 @@ import (
 
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/go-resty/resty"
+	"github.com/shumkovdenis/club/actors/app/update"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/actors/rates"
 	"github.com/shumkovdenis/club/actors/server"
@@ -14,7 +15,13 @@ func StartServer() error {
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
 	props := actor.FromProducer(group.NewActor)
-	pid := actor.SpawnNamed(props, "/rates")
+	pid := actor.SpawnNamed(props, "/update")
+
+	props = actor.FromInstance(update.NewActor(pid))
+	actor.Spawn(props)
+
+	props = actor.FromProducer(group.NewActor)
+	pid = actor.SpawnNamed(props, "/rates")
 
 	props = actor.FromInstance(rates.New(pid))
 	actor.Spawn(props)

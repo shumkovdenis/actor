@@ -26,5 +26,5 @@ var serverCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(serverCmd)
 
-	serverCmd.PersistentFlags().StringVar(&config, "config", "", "config file")
+	serverCmd.Flags().StringVar(&config, "config", "", "config file")
 }

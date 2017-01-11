@@ -4,7 +4,13 @@
             "type": "command.subscribe",
             "data": {
                 "topics": [
-                    "event.login.success"
+                    "event.app.update.no",
+                    "event.app.update.available",
+                    "event.app.update.download",
+                    "event.app.update.ready",
+                    "event.app.update.install",
+                    "event.app.update.restart",
+                    "event.app.update.fail"
                 ]
             }
         },

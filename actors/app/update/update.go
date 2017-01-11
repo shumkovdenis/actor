@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/AsynkronIT/gam/actor"
-	"github.com/cavaliercoder/grab"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/manifest"
@@ -56,10 +55,11 @@ type updateActor struct {
 
 func NewActor(listener *actor.PID) actor.Actor {
 	m := manifest.Get()
+	url := m.Config.UpdateServer.URL + "/" + m.Version + "/"
 	return &updateActor{
-		checkURL:      m.Config.UpdateServer.URL + "/" + m.Version,
+		checkURL:      url + "props.json",
 		checkInterval: m.Config.UpdateServer.CheckInterval,
-		downloadURL:   m.Config.UpdateServer.URL + "/" + m.Version + ".zip",
+		downloadURL:   url + "data.zip",
 		listener:      listener,
 	}
 }
@@ -95,25 +95,25 @@ func (state *updateActor) checkUpdateLoop() {
 		if ok {
 			state.listener.Tell(&Available{})
 
-			respch, err := grab.GetAsync(".", state.downloadURL)
-			if err != nil {
-				state.listener.Tell(&Fail{err.Error()})
-				continue
-			}
+			// respch, err := grab.GetAsync(".", state.downloadURL)
+			// if err != nil {
+			// 	state.listener.Tell(&Fail{err.Error()})
+			// 	continue
+			// }
 
-			resp := <-respch
+			// resp := <-respch
 
-			for !resp.IsComplete() {
-				state.listener.Tell(&Download{resp.Progress()})
-				time.Sleep(200 * time.Millisecond)
-			}
+			// for !resp.IsComplete() {
+			// 	state.listener.Tell(&Download{resp.Progress()})
+			// 	time.Sleep(200 * time.Millisecond)
+			// }
 
-			if resp.Error != nil {
-				state.listener.Tell(&Fail{resp.Error.Error()})
-				continue
-			}
+			// if resp.Error != nil {
+			// 	state.listener.Tell(&Fail{resp.Error.Error()})
+			// 	continue
+			// }
 
-			state.listener.Tell(&Ready{})
+			// state.listener.Tell(&Ready{})
 		} else {
 			state.listener.Tell(&No{})
 		}

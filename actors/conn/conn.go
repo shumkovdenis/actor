@@ -44,6 +44,7 @@ func (state *connActor) reader(ctx actor.Context) {
 		cmd := &messages.Command{}
 		if err := state.ws.ReadJSON(cmd); err != nil {
 			log.Error("read error", zap.Error(err))
+			ctx.Self().Stop()
 			return
 		}
 
