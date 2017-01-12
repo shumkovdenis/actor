@@ -24,7 +24,10 @@ func StartServer() error {
 		return fmt.Errorf("config %s", err)
 	}
 
-	log.Info("Start server", zap.String("version", manifest.Version()))
+	log.Info("Start server",
+		zap.String("version", manifest.Version()),
+		zap.Int("port", config.Server().Port),
+	)
 
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 

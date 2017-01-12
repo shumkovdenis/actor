@@ -13,6 +13,11 @@ func init() {
 	c = new()
 }
 
+type server struct {
+	Port       int    `mapstructure:"port" validate:"required"`
+	PublicPath string `mapstructure:"public_path" validate:"required"`
+}
+
 type accountAPI struct {
 	URL  string `mapstructure:"url" validate:"required,url"`
 	Type string `mapstructure:"type" validate:"eq=ALLIN|eq=BINOPT"`
@@ -38,6 +43,7 @@ func (c *updateServer) DownloadURL() string {
 }
 
 type config struct {
+	Server       *server       `mapstructure:"server"`
 	AccountAPI   *accountAPI   `mapstructure:"account_api"`
 	RatesAPI     *ratesAPI     `mapstructure:"rates_api"`
 	UpdateServer *updateServer `mapstructure:"update_server"`
@@ -45,6 +51,10 @@ type config struct {
 
 func new() *config {
 	return &config{
+		Server: &server{
+			Port:       8282,
+			PublicPath: "public",
+		},
 		AccountAPI: &accountAPI{},
 		RatesAPI: &ratesAPI{
 			GetInterval: 5000,
@@ -54,6 +64,10 @@ func new() *config {
 			CheckInterval: 5000,
 		},
 	}
+}
+
+func Server() *server {
+	return c.Server
 }
 
 func AccountAPI() *accountAPI {

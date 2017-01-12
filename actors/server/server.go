@@ -1,11 +1,14 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/shumkovdenis/club/actors/conn"
+	"github.com/shumkovdenis/club/config"
 )
 
 type serverActor struct {
@@ -28,11 +31,11 @@ func (state *serverActor) Receive(ctx actor.Context) {
 
 func (state *serverActor) start(ctx actor.Context) {
 	e := echo.New()
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Static("/", "public")
+	e.Static("/", config.Server().PublicPath)
 	e.GET("/ws", state.handler(ctx))
-	e.Logger.Fatal(e.Start(":8282"))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Server().Port)))
 }
 
 func (state *serverActor) handler(ctx actor.Context) echo.HandlerFunc {
