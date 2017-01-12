@@ -10,7 +10,10 @@ import (
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 )
+
+var log = logger.Get()
 
 // Check -> command.app.update.check
 type Check struct {
@@ -79,6 +82,8 @@ func (state *updateActor) Receive(ctx actor.Context) {
 func (state *updateActor) checkUpdateLoop() {
 	ticker := time.Tick(config.UpdateServer().CheckInterval * time.Millisecond)
 	for _ = range ticker {
+		log.Info("Check update")
+
 		ok, err := checkUpdate()
 		if err != nil {
 			state.listener.Tell(&Fail{err.Error()})

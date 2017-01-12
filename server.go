@@ -12,13 +12,10 @@ import (
 	"github.com/shumkovdenis/club/actors/rates"
 	"github.com/shumkovdenis/club/actors/server"
 	"github.com/shumkovdenis/club/config"
-	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/utils"
 	"github.com/uber-go/zap"
 )
-
-var log = logger.Get()
 
 func StartServer() error {
 	if err := utils.Validate(manifest.Get()); err != nil {

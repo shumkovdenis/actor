@@ -2,10 +2,10 @@ package logger
 
 import "github.com/uber-go/zap"
 
-var logger zap.Logger
+var l zap.Logger
 
 func init() {
-	logger = zap.New(
+	l = zap.New(
 		zap.NewTextEncoder(),
 		zap.AddCaller(),
 		zap.DebugLevel,
@@ -13,5 +13,5 @@ func init() {
 }
 
 func Get() zap.Logger {
-	return logger
+	return l
 }

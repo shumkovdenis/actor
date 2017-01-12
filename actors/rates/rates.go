@@ -45,7 +45,7 @@ func (state *ratesActor) Receive(ctx actor.Context) {
 
 		ctx.Become(state.started)
 
-		log.Info("start rates")
+		log.Info("Start rates")
 	}
 }
 
@@ -69,6 +69,6 @@ func (state *ratesActor) request() {
 	for _ = range state.ticker.C {
 		state.listener.Tell(&Change{})
 
-		log.Debug("rates change")
+		log.Debug("Change rates")
 	}
 }
