@@ -58,7 +58,6 @@ func (state *updateActor) started(ctx actor.Context) {
 			ctx.Respond(&No{})
 		}
 	case *Download:
-		log.Debug("download")
 		actors.Process(download, ctx.Respond)
 	case *Install:
 	}

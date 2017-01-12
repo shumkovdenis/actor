@@ -20,7 +20,7 @@ var cfgFile string
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start server",
-	Long:  `Start server`,
+	Long:  `Start server.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := readManifest(); err != nil {
 			return err

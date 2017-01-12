@@ -11,7 +11,7 @@ var dataFile string
 var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "Start client",
-	Long:  `Start client`,
+	Long:  `Start client.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := club.StartClient(dataFile); err != nil {
 			return err
