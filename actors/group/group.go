@@ -37,7 +37,7 @@ type groupActor struct {
 	types     *hashset.Set
 }
 
-func NewActor() actor.Actor {
+func New() actor.Actor {
 	return &groupActor{
 		producers: hashset.New(),
 		consumers: hashset.New(),

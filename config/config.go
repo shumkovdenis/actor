@@ -25,6 +25,7 @@ type ratesAPI struct {
 
 type updateServer struct {
 	URL           string        `mapstructure:"url" validate:"required,url"`
+	AutoUpdate    bool          `mapstructure:"auto_update"`
 	CheckInterval time.Duration `mapstructure:"check_interval" validate:"min=5000"`
 }
 
@@ -49,6 +50,7 @@ func new() *config {
 			GetInterval: 5000,
 		},
 		UpdateServer: &updateServer{
+			AutoUpdate:    false,
 			CheckInterval: 5000,
 		},
 	}

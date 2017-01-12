@@ -8,4 +8,5 @@ get_interval = 5000
 
 [update_server]
 url = "http://localhost:8080"
+auto_update = false
 check_interval = 5000

@@ -77,8 +77,12 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &session.Login{}
 	case "command.join":
 		msg = &session.Join{}
-	case "command.app.update.check":
+	case "command.update.check":
 		msg = &update.Check{}
+	case "command.update.download":
+		msg = &update.Download{}
+	case "command.update.install":
+		msg = &update.Install{}
 	case "command.account.auth":
 		msg = &account.Auth{}
 	case "command.account.balance":
@@ -116,19 +120,19 @@ func processMessage(msg interface{}) *messages.Event {
 	case *session.JoinFail:
 		evt.Type = "event.join.fail"
 	case *update.No:
-		evt.Type = "event.app.update.no"
+		evt.Type = "event.update.no"
 	case *update.Available:
-		evt.Type = "event.app.update.available"
-	case *update.Download:
-		evt.Type = "event.app.update.download"
-	case *update.Ready:
-		evt.Type = "event.app.update.ready"
-	case *update.Install:
-		evt.Type = "event.app.update.install"
-	case *update.Restart:
-		evt.Type = "event.app.update.restart"
+		evt.Type = "event.update.available"
+	case *update.DownloadProgress:
+		evt.Type = "event.update.download.progress"
+	case *update.DownloadComplete:
+		evt.Type = "event.update.download.complete"
+	case *update.InstallComplete:
+		evt.Type = "event.update.install.complete"
+	case *update.InstallRestart:
+		evt.Type = "event.update.install.restart"
 	case *update.Fail:
-		evt.Type = "event.app.update.fail"
+		evt.Type = "event.update.fail"
 	case *account.Fail:
 		evt.Type = "event.account.fail"
 	case *account.AuthSuccess:

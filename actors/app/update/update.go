@@ -7,119 +7,65 @@ import (
 	"net/http"
 
 	"github.com/AsynkronIT/gam/actor"
+	"github.com/cavaliercoder/grab"
 	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/actors"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
+	"github.com/uber-go/zap"
 )
 
 var log = logger.Get()
 
-// Check -> command.app.update.check
-type Check struct {
-}
-
-// No -> event.app.update.no
-type No struct {
-}
-
-// Available -> event.app.update.available
-type Available struct {
-}
-
-// Download -> event.app.update.download
-type Download struct {
-	Progress float64 `json:"progress"`
-}
-
-// Ready -> event.app.update.ready
-type Ready struct {
-}
-
-// Install -> command.app.update.install
-type Install struct {
-}
-
-// Restart -> event.app.update.restart
-type Restart struct {
-}
-
-// Fail -> event.app.update.fail
-type Fail struct {
-	Message string `json:"message"`
-}
-
 type updateActor struct {
-	listener *actor.PID
+	// listener *actor.PID
 }
 
-func NewActor(listener *actor.PID) actor.Actor {
-	return &updateActor{
-		listener: listener,
-	}
+func New() actor.Actor {
+	return &updateActor{}
 }
 
 func (state *updateActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		state.listener.Request(&group.Use{
-			Producer: ctx.Self(),
-			Types: []interface{}{
-				&No{},
-				&Available{},
-				&Download{},
-				&Ready{},
-				&Install{},
-				&Restart{},
-				&Fail{},
-			},
-		}, ctx.Self())
+		ctx.Become(state.started)
 
-		go state.checkUpdateLoop()
+		log.Info("Update started")
 	}
 }
 
-func (state *updateActor) checkUpdateLoop() {
-	ticker := time.Tick(config.UpdateServer().CheckInterval * time.Millisecond)
-	for _ = range ticker {
+func (state *updateActor) started(ctx actor.Context) {
+	switch ctx.Message().(type) {
+	case *Check:
 		log.Info("Check update")
 
-		ok, err := checkUpdate()
+		ok, err := check()
 		if err != nil {
-			state.listener.Tell(&Fail{err.Error()})
-			continue
+			log.Error(err.Error())
+
+			ctx.Respond(&Fail{err.Error()})
+
+			return
 		}
+
 		if ok {
-			state.listener.Tell(&Available{})
+			log.Info("Update available")
 
-			// respch, err := grab.GetAsync(".", state.downloadURL)
-			// if err != nil {
-			// 	state.listener.Tell(&Fail{err.Error()})
-			// 	continue
-			// }
-
-			// resp := <-respch
-
-			// for !resp.IsComplete() {
-			// 	state.listener.Tell(&Download{resp.Progress()})
-			// 	time.Sleep(200 * time.Millisecond)
-			// }
-
-			// if resp.Error != nil {
-			// 	state.listener.Tell(&Fail{resp.Error.Error()})
-			// 	continue
-			// }
-
-			// state.listener.Tell(&Ready{})
+			ctx.Respond(&Available{})
 		} else {
-			state.listener.Tell(&No{})
+			log.Info("Update no")
+
+			ctx.Respond(&No{})
 		}
+	case *Download:
+		log.Debug("download")
+		actors.Process(download, ctx.Respond)
+	case *Install:
 	}
 }
 
-func checkUpdate() (bool, error) {
-	resp, err := resty.R().
-		Get(config.UpdateServer().CheckURL())
+func check() (bool, error) {
+	resp, err := resty.R().Get(config.UpdateServer().CheckURL())
 	if err != nil {
 		return false, fmt.Errorf("Request fail: %s", err)
 	}
@@ -132,4 +78,43 @@ func checkUpdate() (bool, error) {
 	default:
 		return false, fmt.Errorf("Status code: %d", resp.StatusCode())
 	}
+}
+
+func download(tell actors.Tell) {
+	url := config.UpdateServer().DownloadURL()
+
+	log.Info("Download update", zap.String("url", url))
+
+	respch, err := grab.GetAsync(".", url)
+	if err != nil {
+		log.Error(err.Error())
+
+		tell(&Fail{err.Error()})
+
+		return
+	}
+
+	resp := <-respch
+
+	for !resp.IsComplete() {
+		tell(&DownloadProgress{resp.Progress()})
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	if resp.Error != nil {
+		log.Error(resp.Error.Error())
+
+		tell(&Fail{resp.Error.Error()})
+
+		return
+	}
+
+	log.Info("Download update complete")
+
+	tell(&DownloadComplete{})
+}
+
+func install() {
+
 }

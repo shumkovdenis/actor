@@ -4,6 +4,7 @@ import (
 	"github.com/AsynkronIT/gam/actor"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/club/actors/account"
+	"github.com/shumkovdenis/club/actors/app/update"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/messages"
 )
@@ -48,15 +49,16 @@ func NewActor() actor.Actor {
 
 func (state *sessionActor) Receive(ctx actor.Context) {
 	state.subscription(ctx)
+	state.update(ctx)
 
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		pid := actor.NewLocalPID("/update")
-		pid.Tell(&group.Join{Consumer: ctx.Parent()})
+		// pid := actor.NewLocalPID("/update")
+		// pid.Tell(&group.Join{Consumer: ctx.Parent()})
 	case *Login:
 		state.client = uuid.NewV4().String()
 
-		props := actor.FromProducer(group.NewActor)
+		props := actor.FromProducer(group.New)
 		state.clientPID = actor.SpawnNamed(props, "/clients/"+state.client)
 
 		ctx.Become(state.use)
@@ -73,6 +75,7 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 func (state *sessionActor) use(ctx actor.Context) {
 	state.subscription(ctx)
+	state.update(ctx)
 
 	switch ctx.Message().(type) {
 	case *group.Used:
@@ -93,6 +96,7 @@ func (state *sessionActor) use(ctx actor.Context) {
 
 func (state *sessionActor) used(ctx actor.Context) {
 	state.subscription(ctx)
+	state.update(ctx)
 
 	switch msg := ctx.Message().(type) {
 	case
@@ -116,5 +120,15 @@ func (state *sessionActor) subscription(ctx actor.Context) {
 			pid := actor.NewLocalPID("/rates")
 			pid.Tell(&group.Leave{Consumer: ctx.Parent()})
 		}
+	}
+}
+
+func (state *sessionActor) update(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case
+		*update.Check,
+		*update.Download,
+		*update.Install:
+		actor.NewLocalPID("/update").Request(msg, ctx.Parent())
 	}
 }

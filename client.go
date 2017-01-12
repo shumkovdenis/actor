@@ -95,7 +95,7 @@ func connect(d *data) error {
 			if err != nil {
 				log.Fatal("send error:", zap.Error(err))
 			}
-			log.Info(fmt.Sprintf("---------------\nsend: %v\n", msg))
+			log.Info(fmt.Sprintf("\n---------------\nsend: %v\n", msg))
 		case <-interrupt:
 			log.Info("interrupt")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
