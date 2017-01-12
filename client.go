@@ -3,7 +3,6 @@ package club
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"os"
 	"os/signal"
@@ -13,6 +12,10 @@ import (
 	"github.com/gorilla/websocket"
 
 	"io/ioutil"
+
+	"fmt"
+
+	"github.com/uber-go/zap"
 )
 
 type message struct {
@@ -71,9 +74,9 @@ func connect(d *data) error {
 			msg := message{}
 			err := c.ReadJSON(&msg)
 			if err != nil {
-				log.Fatalln("recv error:", err)
+				log.Fatal("recv error:", zap.Error(err))
 			}
-			log.Printf("recv: %v\n", msg)
+			log.Info(fmt.Sprintf("recv: %v\n", msg))
 
 			if nextState, ok := d.Events[msg.Type]; ok {
 				if nextCommand, ok := d.States[nextState]; ok {
@@ -90,14 +93,14 @@ func connect(d *data) error {
 		case msg := <-in:
 			err := c.WriteJSON(&msg)
 			if err != nil {
-				log.Fatalln("send error:", err)
+				log.Fatal("send error:", zap.Error(err))
 			}
-			log.Printf("---------------\nsend: %v\n", msg)
+			log.Info(fmt.Sprintf("---------------\nsend: %v\n", msg))
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Info("interrupt")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Println("close client:", err)
+				log.Info("close client:", zap.Error(err))
 			}
 			select {
 			case <-done:

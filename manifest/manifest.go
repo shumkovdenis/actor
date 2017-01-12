@@ -1,56 +1,23 @@
 package manifest
 
-import (
-	"errors"
-	"strings"
-
-	"github.com/spf13/viper"
-)
-
-var m *Manifest
+var m *manifest
 
 func init() {
 	m = newManifest()
 }
 
-type Manifest struct {
-	Version string
-	Config  *config
+type manifest struct {
+	Version string `mapstructure:"version" validate:"required"`
 }
 
-func newManifest() *Manifest {
-	return &Manifest{
-		Config: newConfig(),
-	}
+func newManifest() *manifest {
+	return &manifest{}
 }
 
-func Get() *Manifest {
+func Version() string {
+	return m.Version
+}
+
+func Get() *manifest {
 	return m
-}
-
-func Read() error {
-	return nil
-}
-
-func ReadConfig(path string) error {
-	if len(strings.TrimSpace(path)) == 0 {
-		return errors.New("must specify path to config file")
-	}
-
-	viper.SetConfigType("toml")
-	viper.SetConfigFile(path)
-
-	if err := viper.ReadInConfig(); err != nil {
-		return err
-	}
-
-	if err := viper.Unmarshal(m.Config); err != nil {
-		return err
-	}
-
-	if err := m.Config.validate(); err != nil {
-		return err
-	}
-
-	return nil
 }

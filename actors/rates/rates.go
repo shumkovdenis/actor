@@ -5,8 +5,8 @@ import (
 
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/shumkovdenis/club/actors/group"
+	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
-	"github.com/shumkovdenis/club/manifest"
 )
 
 var log = logger.Get()
@@ -21,19 +21,14 @@ type Fail struct {
 }
 
 type ratesActor struct {
-	urlAPI      string
-	getInterval time.Duration
-	listener    *actor.PID
-	members     int
-	ticker      *time.Ticker
+	listener *actor.PID
+	members  int
+	ticker   *time.Ticker
 }
 
 func New(listener *actor.PID) actor.Actor {
-	conf := manifest.Get().Config.RatesAPI
 	return &ratesActor{
-		urlAPI:      conf.URL,
-		getInterval: conf.GetInterval,
-		listener:    listener,
+		listener: listener,
 	}
 }
 
@@ -70,7 +65,7 @@ func (state *ratesActor) started(ctx actor.Context) {
 }
 
 func (state *ratesActor) request() {
-	state.ticker = time.NewTicker(state.getInterval)
+	state.ticker = time.NewTicker(config.RatesAPI().GetInterval * time.Millisecond)
 	for _ = range state.ticker.C {
 		state.listener.Tell(&Change{})
 

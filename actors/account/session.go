@@ -7,17 +7,18 @@ import (
 	"strconv"
 
 	"github.com/go-resty/resty"
+	"github.com/shumkovdenis/club/config"
 )
 
-func (state *accountActor) session(gameID int) (*SessionSuccess, error) {
+func session(account, password string, gameID int) (*SessionSuccess, error) {
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   state.typeAPI + "_CLIENT_SESSION",
-			"auth_username": state.account,
-			"auth_password": state.password,
+			"auth_submit":   config.AccountAPI().Type + "_CLIENT_SESSION",
+			"auth_username": account,
+			"auth_password": password,
 			"game_id":       strconv.Itoa(gameID),
 		}).
-		Post(state.urlAPI)
+		Post(config.AccountAPI().URL)
 	if err != nil {
 		return nil, fmt.Errorf("Request fail: %s", err)
 	}

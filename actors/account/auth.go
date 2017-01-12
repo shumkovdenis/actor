@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-resty/resty"
+	"github.com/shumkovdenis/club/config"
 )
 
 type Game struct {
@@ -18,14 +19,14 @@ type Category struct {
 	Games []Game `json:"games"`
 }
 
-func (state *accountActor) auth(account, password string) (*AuthSuccess, error) {
+func auth(account, password string) (*AuthSuccess, error) {
 	resp, err := resty.R().
 		SetFormData(map[string]string{
-			"auth_submit":   state.typeAPI + "_CLIENT_AUTH",
+			"auth_submit":   config.AccountAPI().Type + "_CLIENT_AUTH",
 			"auth_username": account,
 			"auth_password": password,
 		}).
-		Post(state.urlAPI)
+		Post(config.AccountAPI().URL)
 	if err != nil {
 		return nil, fmt.Errorf("Request fail: %s", err)
 	}

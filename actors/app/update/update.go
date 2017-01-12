@@ -9,7 +9,7 @@ import (
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors/group"
-	"github.com/shumkovdenis/club/manifest"
+	"github.com/shumkovdenis/club/config"
 )
 
 // Check -> command.app.update.check
@@ -47,20 +47,12 @@ type Fail struct {
 }
 
 type updateActor struct {
-	checkURL      string
-	checkInterval time.Duration
-	downloadURL   string
-	listener      *actor.PID
+	listener *actor.PID
 }
 
 func NewActor(listener *actor.PID) actor.Actor {
-	m := manifest.Get()
-	url := m.Config.UpdateServer.URL + "/" + m.Version + "/"
 	return &updateActor{
-		checkURL:      url + "props.json",
-		checkInterval: m.Config.UpdateServer.CheckInterval,
-		downloadURL:   url + "data.zip",
-		listener:      listener,
+		listener: listener,
 	}
 }
 
@@ -85,9 +77,9 @@ func (state *updateActor) Receive(ctx actor.Context) {
 }
 
 func (state *updateActor) checkUpdateLoop() {
-	ticker := time.Tick(state.checkInterval)
+	ticker := time.Tick(config.UpdateServer().CheckInterval * time.Millisecond)
 	for _ = range ticker {
-		ok, err := state.checkUpdate()
+		ok, err := checkUpdate()
 		if err != nil {
 			state.listener.Tell(&Fail{err.Error()})
 			continue
@@ -120,9 +112,9 @@ func (state *updateActor) checkUpdateLoop() {
 	}
 }
 
-func (state *updateActor) checkUpdate() (bool, error) {
+func checkUpdate() (bool, error) {
 	resp, err := resty.R().
-		Get(state.checkURL)
+		Get(config.UpdateServer().CheckURL())
 	if err != nil {
 		return false, fmt.Errorf("Request fail: %s", err)
 	}

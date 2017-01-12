@@ -1,9 +1,6 @@
 package account
 
-import (
-	"github.com/AsynkronIT/gam/actor"
-	"github.com/shumkovdenis/club/manifest"
-)
+import "github.com/AsynkronIT/gam/actor"
 
 // Auth -> command.account.auth
 type Auth struct {
@@ -71,18 +68,12 @@ type Fail struct {
 }
 
 type accountActor struct {
-	urlAPI   string
-	typeAPI  string
 	account  string
 	password string
 }
 
 func NewActor() actor.Actor {
-	conf := manifest.Get().Config.AccountAPI
-	return &accountActor{
-		urlAPI:  conf.URL,
-		typeAPI: conf.Type,
-	}
+	return &accountActor{}
 }
 
 func (state *accountActor) Receive(ctx actor.Context) {
@@ -95,7 +86,7 @@ func (state *accountActor) Receive(ctx actor.Context) {
 func (state *accountActor) started(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Auth:
-		success, err := state.auth(msg.Account, msg.Password)
+		success, err := auth(msg.Account, msg.Password)
 		if err != nil {
 			ctx.Respond(&AuthFail{err.Error()})
 			return
@@ -112,21 +103,21 @@ func (state *accountActor) started(ctx actor.Context) {
 func (state *accountActor) authorized(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *Balance:
-		success, err := state.balance()
+		success, err := balance(state.account, state.password)
 		if err != nil {
 			ctx.Respond(&BalanceFail{err.Error()})
 			return
 		}
 		ctx.Respond(success)
 	case *Session:
-		success, err := state.session(msg.GameID)
+		success, err := session(state.account, state.password, msg.GameID)
 		if err != nil {
 			ctx.Respond(&SessionFail{err.Error()})
 			return
 		}
 		ctx.Respond(success)
 	case *Withdraw:
-		success, err := state.withdraw()
+		success, err := withdraw(state.account, state.password)
 		if err != nil {
 			ctx.Respond(&WithdrawFail{err.Error()})
 			return
