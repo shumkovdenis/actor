@@ -13,6 +13,7 @@ type Use struct {
 }
 
 type Used struct {
+	Producer *actor.PID
 }
 
 type Join struct {
@@ -52,7 +53,7 @@ func (state *groupActor) Receive(ctx actor.Context) {
 		for _, t := range msg.Types {
 			state.types.Add(t)
 		}
-		ctx.Respond(&Used{})
+		ctx.Respond(&Used{msg.Producer})
 	case *Join:
 		state.consumers.Add(msg.Consumer)
 		state.tellProducers(&Joined{msg.Consumer})

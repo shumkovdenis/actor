@@ -53,8 +53,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		// pid := actor.NewLocalPID("/update")
-		// pid.Tell(&group.Join{Consumer: ctx.Parent()})
+		pid := actor.NewLocalPID("/update/auto")
+		pid.Tell(&group.Join{Consumer: ctx.Parent()})
 	case *Login:
 		state.client = uuid.NewV4().String()
 

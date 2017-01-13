@@ -49,28 +49,28 @@ type updateServer struct {
 	CheckInterval time.Duration `mapstructure:"check_interval" validate:"min=5000"`
 }
 
-func (c *updateServer) versionURL() string {
+func (c *updateServer) updateURL() string {
 	return c.URL + "/" + manifest.Version() + "/"
 }
 
-func (c *updateServer) versionPath() string {
+func (c *updateServer) UpdatePath() string {
 	return path.Join(os.TempDir(), appName+"-"+manifest.Version())
 }
 
 func (c *updateServer) PropsURL() string {
-	return c.versionURL() + propsFile
+	return c.updateURL() + propsFile
 }
 
 func (c *updateServer) PropsPath() string {
-	return path.Join(c.versionPath(), propsFile)
+	return path.Join(c.UpdatePath(), propsFile)
 }
 
 func (c *updateServer) DataURL() string {
-	return c.versionURL() + dataFile
+	return c.updateURL() + dataFile
 }
 
 func (c *updateServer) DataPath() string {
-	return path.Join(c.versionPath(), dataFile)
+	return path.Join(c.UpdatePath(), dataFile)
 }
 
 func (c *updateServer) AppPath() string {
