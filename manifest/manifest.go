@@ -1,16 +1,29 @@
 package manifest
 
-var m *manifest
+import (
+	"github.com/shumkovdenis/club/utils"
+	"github.com/spf13/viper"
+)
+
+const (
+	file = "manifest.json"
+)
+
+var (
+	v *viper.Viper
+	m *manifest
+)
 
 func init() {
-	m = newManifest()
+	v = viper.New()
+	m = new()
 }
 
 type manifest struct {
 	Version string `mapstructure:"version" validate:"required"`
 }
 
-func newManifest() *manifest {
+func new() *manifest {
 	return &manifest{}
 }
 
@@ -18,6 +31,25 @@ func Version() string {
 	return m.Version
 }
 
-func Get() *manifest {
-	return m
+func Viper() *viper.Viper {
+	return v
+}
+
+func Read() error {
+	v.SetConfigType("json")
+	v.SetConfigFile(file)
+
+	if err := v.ReadInConfig(); err != nil {
+		return err
+	}
+
+	if err := v.Unmarshal(m); err != nil {
+		return err
+	}
+
+	if err := utils.Validate(m); err != nil {
+		return err
+	}
+
+	return nil
 }

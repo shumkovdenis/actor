@@ -6,17 +6,25 @@ import (
 	"time"
 
 	"github.com/shumkovdenis/club/manifest"
+	"github.com/shumkovdenis/club/utils"
+	"github.com/spf13/viper"
 )
 
 const (
+	File = "config.toml"
+
 	appName   = "club"
 	propsFile = "props.json"
 	dataFile  = "data.zip"
 )
 
-var c *config
+var (
+	v *viper.Viper
+	c *config
+)
 
 func init() {
+	v = viper.New()
 	c = new()
 }
 
@@ -46,7 +54,6 @@ func (c *updateServer) versionURL() string {
 }
 
 func (c *updateServer) versionPath() string {
-	// os.TempDir() + "/" + appName + "-" + manifest.Version() + "/"
 	return path.Join(os.TempDir(), appName+"-"+manifest.Version())
 }
 
@@ -110,6 +117,25 @@ func UpdateServer() *updateServer {
 	return c.UpdateServer
 }
 
-func Get() *config {
-	return c
+func Viper() *viper.Viper {
+	return v
+}
+
+func Read(file string) error {
+	v.SetConfigType("toml")
+	v.SetConfigFile(file)
+
+	if err := v.ReadInConfig(); err != nil {
+		return err
+	}
+
+	if err := v.Unmarshal(c); err != nil {
+		return err
+	}
+
+	if err := utils.Validate(c); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -3,27 +3,16 @@ package club
 import (
 	"crypto/tls"
 
-	"fmt"
-
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors/app/update"
 	"github.com/shumkovdenis/club/actors/server"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/manifest"
-	"github.com/shumkovdenis/club/utils"
 	"github.com/uber-go/zap"
 )
 
 func StartServer() error {
-	if err := utils.Validate(manifest.Get()); err != nil {
-		return fmt.Errorf("manifest %s", err)
-	}
-
-	if err := utils.Validate(config.Get()); err != nil {
-		return fmt.Errorf("config %s", err)
-	}
-
 	log.Info("Start server",
 		zap.String("version", manifest.Version()),
 		zap.Int("port", config.Server().Port),

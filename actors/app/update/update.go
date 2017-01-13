@@ -141,6 +141,8 @@ func install(tell actors.Tell) {
 	dataPath := config.UpdateServer().DataPath()
 	appPath := config.UpdateServer().AppPath()
 
+	log.Info("Install update")
+
 	if err := packer.Unpack(dataPath, appPath); err != nil {
 		log.Error(err.Error())
 
@@ -148,6 +150,8 @@ func install(tell actors.Tell) {
 
 		return
 	}
+
+	log.Info("Update install completed")
 
 	tell(&InstallComplete{})
 }
