@@ -8,10 +8,10 @@ import (
 
 	"github.com/AsynkronIT/gam/actor"
 	"github.com/cavaliercoder/grab"
-	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
+	"github.com/shumkovdenis/club/packer"
 	"github.com/uber-go/zap"
 )
 
@@ -30,68 +30,91 @@ func (state *updateActor) Receive(ctx actor.Context) {
 	case *actor.Started:
 		ctx.Become(state.started)
 
-		log.Info("Update started")
+		log.Info("Update actor started")
 	}
 }
 
 func (state *updateActor) started(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *Check:
-		log.Info("Check update")
-
-		ok, err := check()
-		if err != nil {
-			log.Error(err.Error())
-
-			ctx.Respond(&Fail{err.Error()})
-
-			return
-		}
-
-		if ok {
-			log.Info("Update available")
-
-			ctx.Respond(&Available{})
-		} else {
-			log.Info("Update no")
-
-			ctx.Respond(&No{})
-		}
+		actors.Process(check, ctx.Respond)
 	case *Download:
 		actors.Process(download, ctx.Respond)
 	case *Install:
+		actors.Process(install, ctx.Respond)
 	}
 }
 
-func check() (bool, error) {
-	resp, err := resty.R().Get(config.UpdateServer().CheckURL())
+func check(tell actors.Tell) {
+	url := config.UpdateServer().PropsURL()
+	path := config.UpdateServer().PropsPath()
+
+	log.Info("Check update",
+		zap.String("url", url),
+		zap.String("path", path),
+	)
+
+	req, err := grab.NewRequest(url)
 	if err != nil {
-		return false, fmt.Errorf("Request fail: %s", err)
+		log.Error(err.Error())
+
+		tell(&Fail{"Update check failed"})
+
+		return
 	}
 
-	switch resp.StatusCode() {
+	req.Filename = path
+	req.CreateMissing = true
+
+	resp, err := grab.DefaultClient.Do(req)
+	if err != nil {
+		log.Error(err.Error())
+
+		tell(&Fail{"Update check failed"})
+
+		return
+	}
+
+	code := resp.HTTPResponse.StatusCode
+
+	switch code {
 	case http.StatusOK:
-		return true, nil
+		log.Info("Update available")
+
+		tell(&Available{})
 	case http.StatusNotFound:
-		return false, nil
+		log.Info("Update no")
+
+		tell(&No{})
 	default:
-		return false, fmt.Errorf("Status code: %d", resp.StatusCode())
+		log.Error(fmt.Sprintf("Status code: %d", code))
+
+		tell(&Fail{"Update check failed"})
 	}
 }
 
 func download(tell actors.Tell) {
-	url := config.UpdateServer().DownloadURL()
+	url := config.UpdateServer().DataURL()
+	path := config.UpdateServer().DataPath()
 
-	log.Info("Download update", zap.String("url", url))
+	log.Info("Download update",
+		zap.String("url", url),
+		zap.String("path", path),
+	)
 
-	respch, err := grab.GetAsync(".", url)
+	req, err := grab.NewRequest(url)
 	if err != nil {
 		log.Error(err.Error())
 
-		tell(&Fail{err.Error()})
+		tell(&Fail{"Update download failed"})
 
 		return
 	}
+
+	req.Filename = path
+	req.CreateMissing = true
+
+	respch := grab.DefaultClient.DoAsync(req)
 
 	resp := <-respch
 
@@ -104,16 +127,27 @@ func download(tell actors.Tell) {
 	if resp.Error != nil {
 		log.Error(resp.Error.Error())
 
-		tell(&Fail{resp.Error.Error()})
+		tell(&Fail{"Update download failed"})
 
 		return
 	}
 
-	log.Info("Download update complete")
+	log.Info("Update download completed")
 
 	tell(&DownloadComplete{})
 }
 
-func install() {
+func install(tell actors.Tell) {
+	dataPath := config.UpdateServer().DataPath()
+	appPath := config.UpdateServer().AppPath()
 
+	if err := packer.Unpack(dataPath, appPath); err != nil {
+		log.Error(err.Error())
+
+		tell(&Fail{"Update install failed"})
+
+		return
+	}
+
+	tell(&InstallComplete{})
 }

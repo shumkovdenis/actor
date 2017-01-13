@@ -1,10 +1,17 @@
 package config
 
 import (
-	"fmt"
+	"os"
+	"path"
 	"time"
 
 	"github.com/shumkovdenis/club/manifest"
+)
+
+const (
+	appName   = "club"
+	propsFile = "props.json"
+	dataFile  = "data.zip"
 )
 
 var c *config
@@ -34,12 +41,33 @@ type updateServer struct {
 	CheckInterval time.Duration `mapstructure:"check_interval" validate:"min=5000"`
 }
 
-func (c *updateServer) CheckURL() string {
-	return fmt.Sprintf("%s/%s/props.json", c.URL, manifest.Version())
+func (c *updateServer) versionURL() string {
+	return c.URL + "/" + manifest.Version() + "/"
 }
 
-func (c *updateServer) DownloadURL() string {
-	return fmt.Sprintf("%s/%s/data.zip", c.URL, manifest.Version())
+func (c *updateServer) versionPath() string {
+	// os.TempDir() + "/" + appName + "-" + manifest.Version() + "/"
+	return path.Join(os.TempDir(), appName+"-"+manifest.Version())
+}
+
+func (c *updateServer) PropsURL() string {
+	return c.versionURL() + propsFile
+}
+
+func (c *updateServer) PropsPath() string {
+	return path.Join(c.versionPath(), propsFile)
+}
+
+func (c *updateServer) DataURL() string {
+	return c.versionURL() + dataFile
+}
+
+func (c *updateServer) DataPath() string {
+	return path.Join(c.versionPath(), dataFile)
+}
+
+func (c *updateServer) AppPath() string {
+	return "."
 }
 
 type config struct {

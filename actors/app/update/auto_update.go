@@ -33,44 +33,44 @@ func (state *autoUpdateActor) Receive(ctx actor.Context) {
 func (state *autoUpdateActor) checkUpdateLoop() {
 	ticker := time.Tick(config.UpdateServer().CheckInterval * time.Millisecond)
 	for _ = range ticker {
-		log.Info("Check update (auto)")
+		// log.Info("Check update (auto)")
 
-		ok, err := check()
-		if err != nil {
-			log.Error(err.Error())
+		// ok, err := check()
+		// if err != nil {
+		// 	log.Error(err.Error())
 
-			state.listener.Tell(&Fail{err.Error()})
+		// 	state.listener.Tell(&Fail{err.Error()})
 
-			continue
-		}
-		if ok {
-			log.Info("Update available (auto)")
+		// 	continue
+		// }
+		// if ok {
+		// 	log.Info("Update available (auto)")
 
-			state.listener.Tell(&Available{})
+		// 	state.listener.Tell(&Available{})
 
-			// respch, err := grab.GetAsync(".", state.downloadURL)
-			// if err != nil {
-			// 	state.listener.Tell(&Fail{err.Error()})
-			// 	continue
-			// }
+		// 	// respch, err := grab.GetAsync(".", state.downloadURL)
+		// 	// if err != nil {
+		// 	// 	state.listener.Tell(&Fail{err.Error()})
+		// 	// 	continue
+		// 	// }
 
-			// resp := <-respch
+		// 	// resp := <-respch
 
-			// for !resp.IsComplete() {
-			// 	state.listener.Tell(&Download{resp.Progress()})
-			// 	time.Sleep(200 * time.Millisecond)
-			// }
+		// 	// for !resp.IsComplete() {
+		// 	// 	state.listener.Tell(&Download{resp.Progress()})
+		// 	// 	time.Sleep(200 * time.Millisecond)
+		// 	// }
 
-			// if resp.Error != nil {
-			// 	state.listener.Tell(&Fail{resp.Error.Error()})
-			// 	continue
-			// }
+		// 	// if resp.Error != nil {
+		// 	// 	state.listener.Tell(&Fail{resp.Error.Error()})
+		// 	// 	continue
+		// 	// }
 
-			// state.listener.Tell(&Ready{})
-		} else {
-			log.Info("Update no (auto)")
+		// 	// state.listener.Tell(&Ready{})
+		// } else {
+		// 	log.Info("Update no (auto)")
 
-			state.listener.Tell(&No{})
-		}
+		// 	state.listener.Tell(&No{})
+		// }
 	}
 }
