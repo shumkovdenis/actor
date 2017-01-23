@@ -3,7 +3,7 @@ package broker
 import (
 	"log"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
 	"github.com/shumkovdenis/club/actors/account"

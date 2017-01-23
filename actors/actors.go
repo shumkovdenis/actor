@@ -1,7 +1,7 @@
 package actors
 
 import (
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 type Tell func(interface{})
@@ -28,12 +28,14 @@ func Process(proc Proc, tell Tell) {
 func IsActorMessage(msg interface{}) bool {
 	switch msg.(type) {
 	case
+		*actor.ReceiveTimeout,
 		*actor.Restarting,
 		*actor.Stopping,
 		*actor.Stopped,
-		*actor.PoisonPill,
 		*actor.Started,
-		*actor.Receive:
+		*actor.Restart,
+		*actor.Stop,
+		*actor.PoisonPill:
 		return true
 	}
 	return false

@@ -1,6 +1,6 @@
 package account
 
-import "github.com/AsynkronIT/gam/actor"
+import "github.com/AsynkronIT/protoactor-go/actor"
 
 // Auth -> command.account.auth
 type Auth struct {
@@ -79,7 +79,7 @@ func NewActor() actor.Actor {
 func (state *accountActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		ctx.Become(state.started)
+		ctx.SetBehavior(state.started)
 	}
 }
 
@@ -94,7 +94,7 @@ func (state *accountActor) started(ctx actor.Context) {
 		state.account = msg.Account
 		state.password = msg.Password
 		ctx.Respond(success)
-		ctx.Become(state.authorized)
+		ctx.SetBehavior(state.authorized)
 	case *Balance, *Session, *Withdraw:
 		ctx.Respond(&Fail{"Account is not authorized"})
 	}
@@ -123,7 +123,7 @@ func (state *accountActor) authorized(ctx actor.Context) {
 			return
 		}
 		ctx.Respond(success)
-		ctx.Become(state.started)
+		ctx.SetBehavior(state.started)
 	case *Auth:
 		ctx.Respond(&Fail{"Account already authorized"})
 	}

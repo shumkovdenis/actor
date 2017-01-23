@@ -3,7 +3,8 @@ package club
 import (
 	"crypto/tls"
 
-	"github.com/AsynkronIT/gam/actor"
+	console "github.com/AsynkronIT/goconsole"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/actors/app/update"
 	"github.com/shumkovdenis/club/actors/server"
@@ -20,14 +21,14 @@ func StartServer() error {
 
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-	var props actor.Props
+	var props *actor.Props
 	// var pid *actor.PID
 
 	// props := actor.FromProducer(group.New)
 	// pid := actor.SpawnNamed(props, "/update")
 
 	props = actor.FromProducer(update.New)
-	actor.SpawnNamed(props, "/update")
+	actor.SpawnNamed(props, "update")
 
 	// props = actor.FromProducer(group.New)
 	// pid = actor.SpawnNamed(props, "/rates")
@@ -37,6 +38,8 @@ func StartServer() error {
 
 	props = actor.FromProducer(server.New)
 	actor.Spawn(props)
+
+	console.ReadLine()
 
 	return nil
 }

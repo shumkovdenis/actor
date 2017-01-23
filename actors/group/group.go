@@ -3,7 +3,7 @@ package group
 import (
 	"reflect"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/sets/hashset"
 )
 

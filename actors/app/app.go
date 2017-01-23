@@ -1,6 +1,6 @@
 package app
 
-import "github.com/AsynkronIT/gam/actor"
+import "github.com/AsynkronIT/protoactor-go/actor"
 
 type Fail struct {
 	Message string `json:"message"`

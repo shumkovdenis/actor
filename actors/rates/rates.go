@@ -3,7 +3,7 @@ package rates
 import (
 	"time"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
@@ -43,7 +43,7 @@ func (state *ratesActor) Receive(ctx actor.Context) {
 			},
 		}, ctx.Self())
 
-		ctx.Become(state.started)
+		ctx.SetBehavior(state.started)
 
 		log.Info("Rates started")
 	}

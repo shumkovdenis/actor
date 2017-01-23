@@ -8,9 +8,10 @@ import (
 
 	"os"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/actors"
+	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
@@ -31,11 +32,17 @@ func (state *updateActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		if config.UpdateServer().AutoUpdate {
-			props := actor.FromInstance(newAutoUpdate(ctx.Self()))
+			props := actor.FromProducer(group.New)
+			pid, err := ctx.SpawnNamed(props, "auto")
+			if err != nil {
+				log.Error(err.Error())
+			}
+
+			props = actor.FromInstance(newAutoUpdate(ctx.Self(), pid))
 			ctx.Spawn(props)
 		}
 
-		ctx.Become(state.started)
+		ctx.SetBehavior(state.started)
 
 		log.Info("Update actor started")
 	}
@@ -44,11 +51,56 @@ func (state *updateActor) Receive(ctx actor.Context) {
 func (state *updateActor) started(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *Check:
+		ctx.SetBehavior(state.check)
+
 		actors.Process(check, ctx.Respond)
+
+		ctx.SetBehavior(state.started)
 	case *Download:
+		ctx.SetBehavior(state.download)
+
 		actors.Process(download, ctx.Respond)
+
+		ctx.SetBehavior(state.started)
 	case *Install:
+		ctx.SetBehavior(state.install)
+
 		actors.Process(install, ctx.Respond)
+
+		ctx.SetBehavior(state.started)
+	}
+}
+
+func (state *updateActor) check(ctx actor.Context) {
+	switch ctx.Message().(type) {
+	case *Check:
+		ctx.Respond(&Fail{"Already checking updates"})
+	case
+		*Download,
+		*Install:
+		ctx.Respond(&Fail{"Checking updates"})
+	}
+}
+
+func (state *updateActor) download(ctx actor.Context) {
+	switch ctx.Message().(type) {
+	case *Download:
+		ctx.Respond(&Fail{"Already downloading updates"})
+	case
+		*Check,
+		*Install:
+		ctx.Respond(&Fail{"Downloading updates"})
+	}
+}
+
+func (state *updateActor) install(ctx actor.Context) {
+	switch ctx.Message().(type) {
+	case *Install:
+		ctx.Respond(&Fail{"Already installing updates"})
+	case
+		*Check,
+		*Download:
+		ctx.Respond(&Fail{"Installing updates"})
 	}
 }
 

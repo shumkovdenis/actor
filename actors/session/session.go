@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/club/actors/account"
 	"github.com/shumkovdenis/club/actors/app/update"
@@ -53,21 +53,21 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		pid := actor.NewLocalPID("/update/auto")
+		pid := actor.NewLocalPID("update/auto")
 		pid.Tell(&group.Join{Consumer: ctx.Parent()})
 	case *Login:
 		state.client = uuid.NewV4().String()
 
 		props := actor.FromProducer(group.New)
-		state.clientPID = actor.SpawnNamed(props, "/clients/"+state.client)
+		state.clientPID, _ = actor.SpawnNamed(props, "/clients/"+state.client)
 
-		ctx.Become(state.use)
+		ctx.SetBehavior(state.use)
 
 		state.clientPID.Request(&group.Use{Producer: ctx.Self()}, ctx.Self())
 	case *Join:
 		state.clientPID = actor.NewLocalPID("/clients/" + msg.Client)
 
-		ctx.Become(state.use)
+		ctx.SetBehavior(state.use)
 
 		state.clientPID.Request(&group.Use{Producer: ctx.Self()}, ctx.Self())
 	}
@@ -84,7 +84,7 @@ func (state *sessionActor) use(ctx actor.Context) {
 		props := actor.FromProducer(account.NewActor)
 		state.accountPID = ctx.Spawn(props)
 
-		ctx.Become(state.used)
+		ctx.SetBehavior(state.used)
 
 		if len(state.client) > 0 {
 			ctx.Parent().Tell(&LoginSuccess{state.client})

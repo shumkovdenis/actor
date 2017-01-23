@@ -3,10 +3,11 @@ package server
 import (
 	"fmt"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/shumkovdenis/club/actors/conn"
 	"github.com/shumkovdenis/club/config"
 )
@@ -26,6 +27,8 @@ func (state *serverActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		state.start(ctx)
+
+		log.Info("Server actor started")
 	}
 }
 

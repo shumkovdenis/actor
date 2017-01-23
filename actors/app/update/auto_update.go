@@ -3,7 +3,7 @@ package update
 import (
 	"time"
 
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
 )
@@ -11,21 +11,18 @@ import (
 type autoUpdateActor struct {
 	updater  *actor.PID
 	listener *actor.PID
-	ticker   *time.Ticker
 }
 
-func newAutoUpdate(updater *actor.PID) actor.Actor {
+func newAutoUpdate(updater *actor.PID, listener *actor.PID) actor.Actor {
 	return &autoUpdateActor{
-		updater: updater,
+		updater:  updater,
+		listener: listener,
 	}
 }
 
 func (state *autoUpdateActor) Receive(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
+	switch ctx.Message().(type) {
 	case *actor.Started:
-		props := actor.FromProducer(group.New)
-		state.listener = ctx.SpawnNamed(props, "auto")
-
 		state.listener.Request(&group.Use{
 			Producer: ctx.Self(),
 			Types: []interface{}{
@@ -39,31 +36,61 @@ func (state *autoUpdateActor) Receive(ctx actor.Context) {
 			},
 		}, ctx.Self())
 
-		go state.loop(ctx.Self())
+		state.loop(ctx)
 
 		log.Info("Auto update actor started")
-	case *Available:
-		state.listener.Tell(msg)
-
-		// state.updater.Request(&Download{}, ctx.Self())
-	case *DownloadComplete:
-		state.listener.Tell(msg)
-
-		state.updater.Request(&Install{}, ctx.Self())
-	case
-		*No,
-		*DownloadProgress,
-		*InstallComplete,
-		*InstallRestart:
-		state.listener.Tell(msg)
 	}
 }
 
-func (state *autoUpdateActor) loop(self *actor.PID) {
+func (state *autoUpdateActor) checking(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case *No, Fail:
+		state.loop(ctx)
+	case *Available:
+		log.Info("Available")
+		state.listener.Tell(msg)
+
+		state.loop(ctx)
+
+		// ctx.SetBehavior(state.downloading)
+
+		// state.updater.Request(&Download{}, ctx.Self())
+	}
+}
+
+func (state *autoUpdateActor) downloading(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case *Fail:
+		state.loop(ctx)
+	case *DownloadComplete:
+		state.listener.Tell(msg)
+
+		ctx.SetBehavior(state.installing)
+
+		state.updater.Request(&Install{}, ctx.Self())
+	}
+}
+
+func (state *autoUpdateActor) installing(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case *Fail:
+		state.loop(ctx)
+	case *InstallComplete:
+		state.listener.Tell(msg)
+
+		state.loop(ctx)
+	case *InstallRestart:
+	}
+}
+
+func (state *autoUpdateActor) loop(ctx actor.Context) {
 	conf := config.UpdateServer()
 
-	ticker := time.NewTicker(conf.CheckInterval * time.Millisecond)
-	for _ = range ticker.C {
-		state.updater.Request(&Check{}, self)
-	}
+	ctx.SetBehavior(state.checking)
+
+	go func() {
+		time.Sleep(conf.CheckInterval * time.Millisecond)
+
+		state.updater.Request(&Check{}, ctx.Self())
+	}()
 }

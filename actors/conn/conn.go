@@ -1,7 +1,7 @@
 package conn
 
 import (
-	"github.com/AsynkronIT/gam/actor"
+	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
 	"github.com/shumkovdenis/club/actors/broker"
 	"github.com/shumkovdenis/club/logger"
@@ -27,7 +27,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 	case *actor.Started:
 		props := actor.FromProducer(broker.NewActor)
 		state.brokerPID = ctx.Spawn(props)
-		state.reader(ctx)
+		go state.reader(ctx)
 	case *messages.Event:
 		err := state.ws.WriteJSON(msg)
 		if err != nil {
