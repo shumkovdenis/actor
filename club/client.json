@@ -28,8 +28,6 @@
         }
     },
     "events": {
-        "event.subscribe.success": "#update_check",
-        "event.update.available": "#update_download",
-        "event.update.download.complete": "#update_install"
+        
     }
 }

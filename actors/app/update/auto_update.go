@@ -4,37 +4,35 @@ import (
 	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/plugins"
 )
 
 type autoUpdateActor struct {
-	updater  *actor.PID
-	listener *actor.PID
+	brokerList *plugins.List
 }
 
-func newAutoUpdate(updater *actor.PID, listener *actor.PID) actor.Actor {
+func newAutoUpdate(brokerList *plugins.List) actor.Actor {
 	return &autoUpdateActor{
-		updater:  updater,
-		listener: listener,
+		brokerList: brokerList,
 	}
 }
 
 func (state *autoUpdateActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		state.listener.Request(&group.Use{
-			Producer: ctx.Self(),
-			Types: []interface{}{
-				&No{},
-				&Available{},
-				&DownloadProgress{},
-				&DownloadComplete{},
-				&InstallComplete{},
-				&InstallRestart{},
-				&Fail{},
-			},
-		}, ctx.Self())
+		// state.listener.Request(&group.Use{
+		// 	Producer: ctx.Self(),
+		// Types: []interface{}{
+		// 	&No{},
+		// 	&Available{},
+		// 	&DownloadProgress{},
+		// 	&DownloadComplete{},
+		// 	&InstallComplete{},
+		// 	&InstallRestart{},
+		// 	&Fail{},
+		// },
+		// }, ctx.Self())
 
 		state.loop(ctx)
 
@@ -47,8 +45,7 @@ func (state *autoUpdateActor) checking(ctx actor.Context) {
 	case *No, Fail:
 		state.loop(ctx)
 	case *Available:
-		log.Info("Available")
-		state.listener.Tell(msg)
+		state.brokerList.Tell(msg)
 
 		state.loop(ctx)
 
@@ -63,11 +60,11 @@ func (state *autoUpdateActor) downloading(ctx actor.Context) {
 	case *Fail:
 		state.loop(ctx)
 	case *DownloadComplete:
-		state.listener.Tell(msg)
+		state.brokerList.Tell(msg)
 
 		ctx.SetBehavior(state.installing)
 
-		state.updater.Request(&Install{}, ctx.Self())
+		ctx.Parent().Request(&Install{}, ctx.Self())
 	}
 }
 
@@ -76,7 +73,7 @@ func (state *autoUpdateActor) installing(ctx actor.Context) {
 	case *Fail:
 		state.loop(ctx)
 	case *InstallComplete:
-		state.listener.Tell(msg)
+		state.brokerList.Tell(msg)
 
 		state.loop(ctx)
 	case *InstallRestart:
@@ -91,6 +88,6 @@ func (state *autoUpdateActor) loop(ctx actor.Context) {
 	go func() {
 		time.Sleep(conf.CheckInterval * time.Millisecond)
 
-		state.updater.Request(&Check{}, ctx.Self())
+		ctx.Parent().Request(&Check{}, ctx.Self())
 	}()
 }

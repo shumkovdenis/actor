@@ -1,42 +1,59 @@
 package broker
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/mitchellh/mapstructure"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/club/actors/account"
 	"github.com/shumkovdenis/club/actors/app/update"
 	"github.com/shumkovdenis/club/actors/rates"
 	"github.com/shumkovdenis/club/actors/session"
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/messages"
 )
+
+var log = logger.Get()
+
+type Broker interface {
+	Subs() *treeset.Set
+}
 
 type brokerActor struct {
 	subs       *treeset.Set
 	sessionPID *actor.PID
 }
 
-func NewActor() actor.Actor {
+func New() actor.Actor {
 	subs := treeset.NewWithStringComparator()
 	subs.Add("event.subscribe.success", "event.unsubscribe.success")
-	return &brokerActor{subs: subs}
+	return &brokerActor{
+		subs: subs,
+	}
 }
+
+// func (b *brokerActor) Subs() *treeset.Set {
+// 	return b.subs
+// }
 
 func (state *brokerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		props := actor.FromProducer(session.NewActor)
-		state.sessionPID = ctx.Spawn(props)
+		id := uuid.NewV4().String()
+		props := actor.FromInstance(session.New(id))
+		state.sessionPID, _ = actor.SpawnNamed(props, "sessions/"+id)
+
+		log.Info("Broker actor started")
 	case *messages.Command:
 		message, err := processCommand(msg)
 		if err != nil {
-			log.Fatalf("%s data decoding error: %v\n", msg.Type, err)
+			log.Fatal(fmt.Sprintf("%s data decoding error: %v\n", msg.Type, err))
 		}
 
 		if m := state.subscription(message); m != nil {
-			state.sessionPID.Tell(m)
+			// state.sessionPID.Tell(m)
 			ctx.Self().Tell(m)
 		} else {
 			state.sessionPID.Request(message, ctx.Self())
@@ -75,8 +92,8 @@ func processCommand(cmd *messages.Command) (interface{}, error) {
 		msg = &messages.Unsubscribe{}
 	case "command.login":
 		msg = &session.Login{}
-	case "command.join":
-		msg = &session.Join{}
+	// case "command.join":
+	// 	msg = &session.Join{}
 	case "command.update.check":
 		msg = &update.Check{}
 	case "command.update.download":
@@ -115,10 +132,10 @@ func processMessage(msg interface{}) *messages.Event {
 		evt.Type = "event.login.success"
 	case *session.LoginFail:
 		evt.Type = "event.login.fail"
-	case *session.JoinSuccess:
-		evt.Type = "event.join.success"
-	case *session.JoinFail:
-		evt.Type = "event.join.fail"
+	// case *session.JoinSuccess:
+	// 	evt.Type = "event.join.success"
+	// case *session.JoinFail:
+	// 	evt.Type = "event.join.fail"
 	case *update.No:
 		evt.Type = "event.update.no"
 	case *update.Available:

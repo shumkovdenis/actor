@@ -11,34 +11,37 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/actors"
-	"github.com/shumkovdenis/club/actors/group"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/packer"
+	"github.com/shumkovdenis/club/plugins"
 	"github.com/uber-go/zap"
 )
 
 var log = logger.Get()
 
 type updateActor struct {
+	brokerList *plugins.List
 }
 
-func New() actor.Actor {
-	return &updateActor{}
+func New(brokerList *plugins.List) actor.Actor {
+	return &updateActor{
+		brokerList: brokerList,
+	}
 }
 
 func (state *updateActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		if config.UpdateServer().AutoUpdate {
-			props := actor.FromProducer(group.New)
-			pid, err := ctx.SpawnNamed(props, "auto")
-			if err != nil {
-				log.Error(err.Error())
-			}
+			// props := actor.FromProducer(group.New)
+			// pid, err := ctx.SpawnNamed(props, "auto")
+			// if err != nil {
+			// 	log.Error(err.Error())
+			// }
 
-			props = actor.FromInstance(newAutoUpdate(ctx.Self(), pid))
+			props := actor.FromInstance(newAutoUpdate(state.brokerList))
 			ctx.Spawn(props)
 		}
 

@@ -3,54 +3,141 @@ package server
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/gorilla/websocket"
+	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/labstack/gommon/log"
-	"github.com/shumkovdenis/club/actors/conn"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
+	"github.com/shumkovdenis/club/messages"
 )
+
+var log = logger.Get()
+
+func init() {
+
+}
+
+type Command struct {
+	Type string                 `json:"type"`
+	Data map[string]interface{} `json:"data"`
+}
+
+type Event struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
+type Connect struct {
+}
+
+type Connected struct {
+	ConnectionID string `json:"connection_id"`
+}
+
+type Disconnect struct {
+	ConnectionID string
+}
+
+type Disconnected struct {
+}
+
+type Message struct {
+	ConnectionID string
+	Command      *messages.Command
+}
+
+type Fail struct {
+	Message string `json:"message"`
+}
+
+type Server interface {
+	Registry() Registry
+}
 
 type serverActor struct {
+	cons *treemap.Map
 }
 
-var (
-	upgrader = websocket.Upgrader{}
-)
-
-func New() actor.Actor {
-	return &serverActor{}
-}
-
-func (state *serverActor) Receive(ctx actor.Context) {
-	switch ctx.Message().(type) {
-	case *actor.Started:
-		state.start(ctx)
-
-		log.Info("Server actor started")
+func NewServerActor() actor.Actor {
+	return &serverActor{
+		cons: treemap.NewWithStringComparator(),
 	}
 }
 
-func (state *serverActor) start(ctx actor.Context) {
-	e := echo.New()
-	// e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Static("/", config.Server().PublicPath)
-	e.GET("/ws", state.handler(ctx))
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", config.Server().Port)))
-}
+func (state *serverActor) Server() {}
 
-func (state *serverActor) handler(ctx actor.Context) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+func (state *serverActor) Receive(ctx actor.Context) {
+	log.Debug(fmt.Sprintf("%v", ctx.Message()))
+	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+		conf := config.Server()
+
+		e := echo.New()
+		e.Static("/", conf.PublicPath)
+
+		props := actor.FromInstance(newHTTPActor(e.Group("/http")))
+		_, err := ctx.SpawnNamed(props, "htpp")
 		if err != nil {
-			return err
+			log.Error(err.Error())
 		}
 
-		props := actor.FromInstance(conn.New(ws))
-		ctx.Spawn(props)
+		props = actor.FromInstance(newWSActor(e.Group("/ws")))
+		_, err = ctx.SpawnNamed(props, "ws")
+		if err != nil {
+			log.Error(err.Error())
+		}
 
-		return nil
+		go func() {
+			e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", conf.Port)))
+		}()
+
+		log.Info("Server actor started")
+	case *Connect:
+		id := uuid.NewV4().String()
+
+		props := actor.FromProducer(newBrokerActor)
+		pid, err := ctx.SpawnNamed(props, id)
+		if err != nil {
+			log.Error(err.Error())
+		}
+
+		state.cons.Put(id, pid)
+
+		ctx.Respond(&Connected{id})
+	case *Disconnect:
+		pid, ok := state.cons.Get(msg.ConnectionID)
+		if !ok {
+			ctx.Respond(&Fail{"Connection not found"})
+
+			return
+		}
+
+		state.cons.Remove(msg.ConnectionID)
+
+		pid.(*actor.PID).Stop()
+
+		ctx.Respond(&Disconnected{})
+	case *Message:
+		pid, ok := state.cons.Get(msg.ConnectionID)
+		if !ok {
+			ctx.Respond(&Fail{"Connection not found"})
+
+			return
+		}
+
+		future := pid.(*actor.PID).RequestFuture(msg.Command, 1*time.Second)
+		res, err := future.Result()
+		if err != nil {
+			log.Error(err.Error())
+
+			ctx.Respond(&Fail{"Failure command processing"})
+
+			return
+		}
+
+		ctx.Respond(res)
 	}
 }

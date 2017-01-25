@@ -37,15 +37,15 @@ func (state *ratesActor) Receive(ctx actor.Context) {
 	case *actor.Started:
 		state.listener.Request(&group.Use{
 			Producer: ctx.Self(),
-			Types: []interface{}{
-				&Change{},
-				&Fail{},
-			},
+			// Types: []interface{}{
+			// 	&Change{},
+			// 	&Fail{},
+			// },
 		}, ctx.Self())
 
 		ctx.SetBehavior(state.started)
 
-		log.Info("Rates started")
+		log.Info("Rates actor started")
 	}
 }
 

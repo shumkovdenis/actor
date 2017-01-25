@@ -2,52 +2,97 @@ package session
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	uuid "github.com/satori/go.uuid"
 	"github.com/shumkovdenis/club/actors/account"
 	"github.com/shumkovdenis/club/actors/app/update"
-	"github.com/shumkovdenis/club/actors/group"
-	"github.com/shumkovdenis/club/messages"
+	"github.com/shumkovdenis/club/logger"
+	"github.com/uber-go/zap"
 )
 
-// Login -> command.login
-type Login struct {
-}
+var log = logger.Get()
 
-// LoginSuccess -> event.login.success
-type LoginSuccess struct {
-	Client string `json:"client"`
-}
-
-// LoginFail -> event.login.fail
-type LoginFail struct {
-	Message string `json:"message"`
-}
-
-// Join -> command.join
-type Join struct {
-	Client string `mapstructure:"client"`
-}
-
-// JoinSuccess -> event.join.success
-type JoinSuccess struct {
-}
-
-// JoinFail -> event.join.fail
-type JoinFail struct {
-	Message string `json:"message"`
+type Session interface {
+	ID() string
 }
 
 type sessionActor struct {
+	id         string
+	updatePID  *actor.PID
+	accountPID *actor.PID
+}
+
+func New(id string) actor.Actor {
+	return &sessionActor{id: id}
+}
+
+func (state *sessionActor) ID() string {
+	return state.id
+}
+
+func (state *sessionActor) Receive(ctx actor.Context) {
+	if ok := state.update(ctx); ok {
+		return
+	}
+
+	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+		state.updatePID = actor.NewLocalPID("update")
+
+		log.Info("Session actor started",
+			zap.String("id", state.id),
+		)
+	case *Login:
+		props := actor.FromProducer(account.NewActor)
+		state.accountPID = ctx.Spawn(props)
+
+		ctx.SetBehavior(state.used)
+	default:
+		if _, ok := msg.(actor.SystemMessage); !ok {
+			// ctx.Respond(&Fail{"The session is not logged"})
+		}
+	}
+}
+
+func (state *sessionActor) used(ctx actor.Context) {
+	if ok := state.update(ctx); ok {
+		return
+	}
+
+	switch msg := ctx.Message().(type) {
+	case
+		*account.Auth,
+		*account.Balance,
+		*account.Session,
+		*account.Withdraw:
+		state.accountPID.Request(msg, ctx.Sender())
+	}
+}
+
+func (state *sessionActor) update(ctx actor.Context) bool {
+	switch msg := ctx.Message().(type) {
+	case
+		*update.Check,
+		*update.Download,
+		*update.Install:
+		state.updatePID.Request(msg, ctx.Sender())
+
+		return true
+	}
+
+	return false
+}
+
+/*
+type SessionActor struct {
 	client     string
 	clientPID  *actor.PID
 	accountPID *actor.PID
 }
 
 func NewActor() actor.Actor {
-	return &sessionActor{}
+	return &SessionActor{}
 }
 
-func (state *sessionActor) Receive(ctx actor.Context) {
+func (state *SessionActor) Receive(ctx actor.Context) {
 	state.subscription(ctx)
 	state.update(ctx)
 
@@ -73,7 +118,7 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (state *sessionActor) use(ctx actor.Context) {
+func (state *SessionActor) use(ctx actor.Context) {
 	state.subscription(ctx)
 	state.update(ctx)
 
@@ -94,7 +139,7 @@ func (state *sessionActor) use(ctx actor.Context) {
 	}
 }
 
-func (state *sessionActor) used(ctx actor.Context) {
+func (state *SessionActor) used(ctx actor.Context) {
 	state.subscription(ctx)
 	state.update(ctx)
 
@@ -108,7 +153,7 @@ func (state *sessionActor) used(ctx actor.Context) {
 	}
 }
 
-func (state *sessionActor) subscription(ctx actor.Context) {
+func (state *SessionActor) subscription(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *messages.SubscribeSuccess:
 		if msg.Contains("event.rates.change") {
@@ -123,7 +168,7 @@ func (state *sessionActor) subscription(ctx actor.Context) {
 	}
 }
 
-func (state *sessionActor) update(ctx actor.Context) {
+func (state *SessionActor) update(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case
 		*update.Check,
@@ -132,3 +177,4 @@ func (state *sessionActor) update(ctx actor.Context) {
 		actor.NewLocalPID("/update").Request(msg, ctx.Parent())
 	}
 }
+*/
