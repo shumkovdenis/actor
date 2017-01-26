@@ -52,6 +52,25 @@ func (state *connActor) Event(msg interface{}) string {
 	return ""
 }
 
+func (state *connActor) Commands() []Command {
+	return []Command{
+		&Subscribe{},
+		&Unsubscribe{},
+		&Login{},
+	}
+}
+
+func (state *connActor) Events() []Event {
+	return []Event{
+		&SubscribeSuccess{},
+		&SubscribeFail{},
+		&UnsubscribeSuccess{},
+		&UnsubscribeFail{},
+		&LoginSuccess{},
+		&LoginFail{},
+	}
+}
+
 func (state *connActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:

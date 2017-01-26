@@ -9,10 +9,22 @@ import (
 type Ping struct {
 }
 
+func (*Ping) Command() string {
+	return "command.ping"
+}
+
 type Pong struct {
 }
 
+func (*Pong) Event() string {
+	return "event.pong"
+}
+
 type Update struct {
+}
+
+func (*Update) Event() string {
+	return "event.update"
 }
 
 type sessionActor struct {
@@ -38,6 +50,19 @@ func (state *sessionActor) Event(msg interface{}) string {
 		return "event.update"
 	}
 	return ""
+}
+
+func (state *sessionActor) Commands() []Command {
+	return []Command{
+		&Ping{},
+	}
+}
+
+func (state *serverActor) Events() []Event {
+	return []Event{
+		&Pong{},
+		&Update{},
+	}
 }
 
 func (state *sessionActor) Receive(ctx actor.Context) {
