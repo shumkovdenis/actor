@@ -1,11 +1,10 @@
-package services
+package server
 
 import (
 	"github.com/emirpasic/gods/sets/treeset"
 )
 
 type Broker interface {
-	Topics() *treeset.Set
 	AddTopics(topics []string)
 	RemoveTopics(topics []string)
 	Contains(topic string) bool
@@ -19,10 +18,6 @@ func newBroker() Broker {
 	return &broker{
 		topics: treeset.NewWithStringComparator(),
 	}
-}
-
-func (b *broker) Topics() *treeset.Set {
-	return b.topics
 }
 
 func (b *broker) AddTopics(topics []string) {

@@ -15,33 +15,33 @@ type Record interface {
 type Registry interface {
 	AddRecord(rec Record)
 	RemoveRecord(rec Record)
-	ToMessage(cmd *Command) (interface{}, error)
-	FromMessage(msg interface{}) (*Event, error)
+	ToMessage(cmd *command) (interface{}, error)
+	FromMessage(msg interface{}) (*event, error)
 }
 
 type registry struct {
-	recs *hashset.Set
+	records *hashset.Set
 }
 
 func newRegistry() Registry {
 	return &registry{
-		recs: hashset.New(),
+		records: hashset.New(),
 	}
 }
 
 func (r *registry) AddRecord(rec Record) {
-	r.recs.Add(rec)
+	r.records.Add(rec)
 }
 
 func (r *registry) RemoveRecord(rec Record) {
-	r.recs.Remove(rec)
+	r.records.Remove(rec)
 }
 
-func (r *registry) ToMessage(cmd *Command) (interface{}, error) {
+func (r *registry) ToMessage(cmd *command) (interface{}, error) {
 	var msg interface{}
 
-	for _, rec := range r.recs.Values() {
-		msg = rec.(Record).Command(cmd.Type)
+	for _, record := range r.records.Values() {
+		msg = record.(Record).Command(cmd.Type)
 
 		if msg != nil {
 			break
@@ -59,22 +59,22 @@ func (r *registry) ToMessage(cmd *Command) (interface{}, error) {
 	return msg, nil
 }
 
-func (r *registry) FromMessage(msg interface{}) (*Event, error) {
+func (r *registry) FromMessage(msg interface{}) (*event, error) {
 	var typ string
 
-	for _, rec := range r.recs.Values() {
-		typ = rec.(Record).Event(msg)
+	for _, record := range r.records.Values() {
+		typ = record.(Record).Event(msg)
 
 		if len(typ) > 0 {
 			break
 		}
 	}
 
-	if len(typ) > 0 {
+	if len(typ) == 0 {
 		return nil, errors.New("Event not found")
 	}
 
-	evt := &Event{
+	evt := &event{
 		Type: typ,
 		Data: msg,
 	}

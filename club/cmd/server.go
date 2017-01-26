@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/shumkovdenis/club"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/manifest"
+	"github.com/shumkovdenis/club/server"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ var serverCmd = &cobra.Command{
 			return fmt.Errorf("read config failed: %s", err)
 		}
 
-		if err := club.StartServer(); err != nil {
+		if err := server.Start(); err != nil {
 			return err
 		}
 

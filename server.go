@@ -1,17 +1,6 @@
 package club
 
-import (
-	"crypto/tls"
-
-	console "github.com/AsynkronIT/goconsole"
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/go-resty/resty"
-	"github.com/shumkovdenis/club/actors/server"
-	"github.com/shumkovdenis/club/config"
-	"github.com/shumkovdenis/club/manifest"
-	"github.com/uber-go/zap"
-)
-
+/*
 func StartServer() error {
 	log.Info("Start server",
 		zap.String("version", manifest.Version()),
@@ -20,26 +9,26 @@ func StartServer() error {
 
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-	/*
-		brokerList := plugins.NewList("brokers")
 
-		var props *actor.Props
-		// var pid *actor.PID
+		// brokerList := plugins.NewList("brokers")
 
-		// props := actor.FromProducer(group.New)
-		// pid := actor.SpawnNamed(props, "/update")
+		// var props *actor.Props
+		// // var pid *actor.PID
 
-		props = actor.FromInstance(update.New(brokerList))
-		actor.SpawnNamed(props, "update")
+		// // props := actor.FromProducer(group.New)
+		// // pid := actor.SpawnNamed(props, "/update")
 
-		// props = actor.FromProducer(group.New)
-		// pid = actor.SpawnNamed(props, "/rates")
+		// props = actor.FromInstance(update.New(brokerList))
+		// actor.SpawnNamed(props, "update")
 
-		// props = actor.FromInstance(rates.New(pid))
+		// // props = actor.FromProducer(group.New)
+		// // pid = actor.SpawnNamed(props, "/rates")
+
+		// // props = actor.FromInstance(rates.New(pid))
+		// // actor.Spawn(props)
+
+		// props = actor.FromInstance(server.New(brokerList))
 		// actor.Spawn(props)
-
-		props = actor.FromInstance(server.New(brokerList))
-		actor.Spawn(props)*/
 
 	props := actor.FromProducer(server.NewServerActor)
 	actor.SpawnNamed(props, "server")
@@ -48,6 +37,7 @@ func StartServer() error {
 
 	return nil
 }
+*/
 
 // func main() {
 // if err := app.ReadInfo(); err != nil {

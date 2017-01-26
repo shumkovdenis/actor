@@ -14,8 +14,12 @@ func (p *registryPlugin) OnStart(ctx actor.Context) {
 	switch act := ctx.Actor().(type) {
 	case Server:
 		p.reg = act.Registry()
+
+		log.Info("Registry plugin: server start")
 	case Record:
 		p.reg.AddRecord(act)
+
+		log.Debug("Registry plugin: add record")
 	}
 }
 
