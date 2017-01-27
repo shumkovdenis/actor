@@ -22,52 +22,15 @@ func (state *connActor) Broker() Broker {
 	return state.broker
 }
 
-func (state *connActor) Command(typ string) interface{} {
-	switch typ {
-	case "command.subscribe":
-		return &Subscribe{}
-	case "command.unsubscribe":
-		return &Unsubscribe{}
-	case "command.login":
-		return &Login{}
-	}
-	return nil
+func (*connActor) Name() string {
+	return "connActor"
 }
 
-func (state *connActor) Event(msg interface{}) string {
-	switch msg.(type) {
-	case *SubscribeSuccess:
-		return "event.subscribe.success"
-	case *SubscribeFail:
-		return "event.subscribe.fail"
-	case *UnsubscribeSuccess:
-		return "event.unsubscribe.success"
-	case *UnsubscribeFail:
-		return "event.unsubscribe.fail"
-	case *LoginSuccess:
-		return "event.login.success"
-	case *LoginFail:
-		return "event.login.fail"
-	}
-	return ""
-}
-
-func (state *connActor) Commands() []Command {
+func (*connActor) Commands() []Command {
 	return []Command{
 		&Subscribe{},
 		&Unsubscribe{},
 		&Login{},
-	}
-}
-
-func (state *connActor) Events() []Event {
-	return []Event{
-		&SubscribeSuccess{},
-		&SubscribeFail{},
-		&UnsubscribeSuccess{},
-		&UnsubscribeFail{},
-		&LoginSuccess{},
-		&LoginFail{},
 	}
 }
 

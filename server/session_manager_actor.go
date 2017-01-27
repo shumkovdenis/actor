@@ -15,7 +15,8 @@ type sessionManagerActor struct {
 
 func newSessionManagerActor() actor.Actor {
 	return &sessionManagerActor{
-		sessions: treemap.NewWithStringComparator(),
+		sessions:    treemap.NewWithStringComparator(),
+		connections: hashmap.New(),
 	}
 }
 

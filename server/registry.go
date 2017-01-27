@@ -12,21 +12,13 @@ import (
 type Act interface {
 	Name() string
 	Commands() []Command
-	Events() []Event
-}
-
-type Record interface {
-	Command(typ string) interface{}
-	Event(msg interface{}) string
 }
 
 type Registry interface {
 	Register(act Act)
 	Unregister(act Act)
-	AddRecord(rec Record)
-	RemoveRecord(rec Record)
 	ToMessage(cmd *command) (Command, error)
-	FromMessage(msg Event) (*event, error)
+	FromMessage(msg interface{}) (*event, error)
 }
 
 type registry struct {
@@ -38,6 +30,8 @@ type registry struct {
 func newRegistry() Registry {
 	return &registry{
 		records: hashset.New(),
+		acts:    treemap.NewWithStringComparator(),
+		cmds:    treemap.NewWithStringComparator(),
 	}
 }
 
@@ -74,14 +68,6 @@ func (r *registry) Unregister(act Act) {
 	}
 }
 
-func (r *registry) AddRecord(rec Record) {
-	r.records.Add(rec)
-}
-
-func (r *registry) RemoveRecord(rec Record) {
-	r.records.Remove(rec)
-}
-
 func (r *registry) ToMessage(cmd *command) (Command, error) {
 	sample, ok := r.cmds.Get(cmd.Type)
 	if !ok {
@@ -95,46 +81,19 @@ func (r *registry) ToMessage(cmd *command) (Command, error) {
 
 	msg := reflect.New(val.Type()).Interface().(Command)
 
-	// var msg interface{}
-
-	// for _, record := range r.records.Values() {
-	// 	msg = record.(Record).Command(cmd.Type)
-
-	// 	if msg != nil {
-	// 		break
-	// 	}
-	// }
-
-	// if msg == nil {
-	// 	return nil, errors.New("Command not found")
-	// }
-
-	// if err := mapstructure.Decode(cmd.Data, msg); err != nil {
-	// 	return nil, err
-	// }
-
-	// return msg, nil
+	return msg, nil
 }
 
-func (r *registry) FromMessage(msg Event) (*event, error) {
-	// var typ string
+func (r *registry) FromMessage(msg interface{}) (*event, error) {
+	m, ok := msg.(Event)
+	if !ok {
+		return nil, errors.New("Message must implement Event")
+	}
 
-	// for _, record := range r.records.Values() {
-	// 	typ = record.(Record).Event(msg)
+	evt := &event{
+		Type: m.Event(),
+		Data: m,
+	}
 
-	// 	if len(typ) > 0 {
-	// 		break
-	// 	}
-	// }
-
-	// if len(typ) == 0 {
-	// 	return nil, errors.New("Event not found")
-	// }
-
-	// evt := &event{
-	// 	Type: typ,
-	// 	Data: msg,
-	// }
-
-	// return evt, nil
+	return evt, nil
 }

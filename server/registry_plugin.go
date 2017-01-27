@@ -16,18 +16,18 @@ func (p *registryPlugin) OnStart(ctx actor.Context) {
 		p.reg = act.Registry()
 
 		log.Info("Registry plugin: server start")
-	case Record:
-		p.reg.AddRecord(act)
+	case Act:
+		p.reg.Register(act)
 
-		log.Debug("Registry plugin: add record")
+		log.Debug("Registry plugin: register Act")
 	}
 }
 
 func (p *registryPlugin) OnOtherMessage(ctx actor.Context, msg interface{}) {
 	switch msg.(type) {
 	case *actor.Stopped:
-		if rec, ok := ctx.Actor().(Record); ok {
-			p.reg.RemoveRecord(rec)
+		if act, ok := ctx.Actor().(Act); ok {
+			p.reg.Unregister(act)
 		}
 	}
 }
