@@ -1,62 +1,29 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
 
-	console "github.com/AsynkronIT/goconsole"
-	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
-type Hello struct{ Who string }
-type ParentActor struct{}
-
-func (state *ParentActor) Receive(context actor.Context) {
-	switch msg := context.Message().(type) {
-	case Hello:
-		props := actor.FromProducer(NewChildActor)
-		child := context.Spawn(props)
-		child.Tell(msg)
-	}
-}
-
-func NewParentActor() actor.Actor {
-	return &ParentActor{}
-}
-
-type ChildActor struct{}
-
-func (state *ChildActor) Receive(context actor.Context) {
-	switch msg := context.Message().(type) {
-	case *actor.Started:
-		fmt.Println("Starting, initialize actor here")
-	case *actor.Stopping:
-		fmt.Println("Stopping, actor is about shut down")
-	case *actor.Stopped:
-		fmt.Println("Stopped, actor and it's children are stopped")
-	case *actor.Restarting:
-		fmt.Println("Restarting, actor is about restart")
-	case Hello:
-		fmt.Printf("Hello %v\n", msg.Who)
-		panic("Ouch")
-	}
-}
-
-func NewChildActor() actor.Actor {
-	return &ChildActor{}
-}
-
 func main() {
-	decider := func(child *actor.PID, reason interface{}) actor.Directive {
-		fmt.Println("handling failure for child")
-		return actor.StopDirective
-	}
-	supervisor := actor.NewOneForOneStrategy(10, 1000, decider)
-	props := actor.
-		FromProducer(NewParentActor).
-		WithSupervisor(supervisor)
+	// Echo instance
+	e := echo.New()
 
-	pid := actor.Spawn(props)
-	pid.Tell(Hello{Who: "Roger"})
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	console.ReadLine()
+	// Route => handler
+	e.GET("/", func(c echo.Context) error {
+		c.Echo().Group("/test").GET("/1", func(c echo.Context) error {
+			return c.String(http.StatusOK, "ok")
+		})
+
+		return c.String(http.StatusOK, "Hello, World!\n")
+	})
+
+	// Start server
+	e.Logger.Fatal(e.Start(":1323"))
 }

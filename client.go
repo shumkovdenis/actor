@@ -55,7 +55,7 @@ func connect(d *data) error {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: "localhost:8282", Path: "/ws"}
+	u := url.URL{Scheme: "ws", Host: "localhost:8282", Path: "/conn/ws"}
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {

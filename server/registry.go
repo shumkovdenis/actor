@@ -17,8 +17,12 @@ type Act interface {
 type Registry interface {
 	Register(act Act)
 	Unregister(act Act)
-	ToMessage(cmd *command) (Command, error)
+	ToMessage(cmd *command) (interface{}, error)
 	FromMessage(msg interface{}) (*event, error)
+}
+
+type Conv interface {
+	SetRegistry(Registry)
 }
 
 type registry struct {
@@ -68,7 +72,7 @@ func (r *registry) Unregister(act Act) {
 	}
 }
 
-func (r *registry) ToMessage(cmd *command) (Command, error) {
+func (r *registry) ToMessage(cmd *command) (interface{}, error) {
 	sample, ok := r.cmds.Get(cmd.Type)
 	if !ok {
 		return nil, errors.New("Command not found")

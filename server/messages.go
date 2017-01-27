@@ -110,3 +110,11 @@ type UseSessionSuccess struct {
 type UseSessionFail struct {
 	Message string `json:"message"`
 }
+
+type Fail struct {
+	Message string `json:"message"`
+}
+
+func (*Fail) Event() string {
+	return "event.fail"
+}
