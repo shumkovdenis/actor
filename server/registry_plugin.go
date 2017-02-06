@@ -20,8 +20,8 @@ func (p *registryPlugin) OnStart(ctx actor.Context) {
 		p.reg.Register(act)
 
 		log.Debug("Registry plugin: register Act")
-	case Conv:
-		act.SetRegistry(p.reg)
+	case RegistryAware:
+		act.Init(p.reg)
 	}
 }
 

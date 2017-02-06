@@ -21,8 +21,8 @@ type Registry interface {
 	FromMessage(msg interface{}) (*event, error)
 }
 
-type Conv interface {
-	SetRegistry(Registry)
+type RegistryAware interface {
+	Init(Registry)
 }
 
 type registry struct {

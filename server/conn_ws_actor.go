@@ -1,8 +1,6 @@
 package server
 
 import (
-	"time"
-
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/plugin"
 	"github.com/gorilla/websocket"
@@ -11,6 +9,7 @@ import (
 
 type wsConnActor struct {
 	conn   *websocket.Conn
+	brk    Broker
 	reg    Registry
 	brkPID *actor.PID
 }
@@ -18,20 +17,22 @@ type wsConnActor struct {
 func newWSConnActor(conn *websocket.Conn) actor.Actor {
 	return &wsConnActor{
 		conn: conn,
+		brk:  newBroker(),
 	}
 }
 
-func (state *wsConnActor) SetRegistry(reg Registry) {
+func (state *wsConnActor) Init(reg Registry) {
 	state.reg = reg
 }
 
 func (state *wsConnActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		props := actor.FromProducer(newBrokerActor).
+		props := actor.FromInstance(newBrokerActor(state.brk)).
 			WithMiddleware(plugin.Use(RegistryPlugin()))
 		pid, err := ctx.SpawnNamed(props, "broker")
 		if err != nil {
+			log.Error(err.Error())
 		}
 
 		state.brkPID = pid
@@ -45,24 +46,27 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 		if err != nil {
 			log.Error(err.Error())
 
-			msg = &Fail{err.Error()}
+			return
 		}
+
+		sub := state.brk.Contains(evt.Type)
 
 		log.Debug("Event",
 			zap.String("conn", "ws"),
 			zap.String("type", evt.Type),
+			zap.Bool("sub", sub),
 		)
 
-		if err := state.conn.WriteJSON(evt); err != nil {
-			log.Error(err.Error())
+		if sub {
+			if err := state.conn.WriteJSON(evt); err != nil {
+				log.Error(err.Error())
+			}
 		}
 	}
 }
 
 func (state *wsConnActor) reader(ctx actor.Context) {
 	defer ctx.Self().Stop()
-
-	var msg interface{}
 
 	for {
 		cmd := &command{}
@@ -75,43 +79,25 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 
 			log.Error(err.Error())
 
-			msg = &Fail{err.Error()}
-		} else {
-			log.Debug("Command",
-				zap.String("conn", "ws"),
-				zap.String("type", cmd.Type),
-			)
+			ctx.Parent().Tell(&Fail{err.Error()})
 
-			msg, err = state.reg.ToMessage(cmd)
-			if err != nil {
-				log.Error(err.Error())
-
-				msg = &Fail{err.Error()}
-			} else {
-				future := state.brkPID.RequestFuture(msg, 1*time.Second)
-				msg, err = future.Result()
-				if err != nil {
-					log.Error(err.Error())
-
-					msg = &Fail{err.Error()}
-				}
-			}
+			continue
 		}
 
-		evt, err := state.reg.FromMessage(msg)
+		log.Debug("Command",
+			zap.String("conn", "ws"),
+			zap.String("type", cmd.Type),
+		)
+
+		msg, err := state.reg.ToMessage(cmd)
 		if err != nil {
 			log.Error(err.Error())
 
-			msg = &Fail{err.Error()}
+			ctx.Parent().Tell(&Fail{err.Error()})
+
+			continue
 		}
 
-		log.Debug("Event",
-			zap.String("conn", "ws"),
-			zap.String("type", evt.Type),
-		)
-
-		if err := state.conn.WriteJSON(evt); err != nil {
-			log.Error(err.Error())
-		}
+		state.brkPID.Request(msg, ctx.Self())
 	}
 }

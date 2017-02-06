@@ -4,34 +4,43 @@ import (
 	"net/http"
 	"time"
 
+	"errors"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/plugin"
+	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/labstack/echo"
+	"github.com/uber-go/zap"
 )
 
 type httpConnActor struct {
 	grp    *echo.Group
+	brk    Broker
 	reg    Registry
+	msgs   *arraylist.List
 	brkPID *actor.PID
 }
 
 func newHTTPConnActor(group *echo.Group) actor.Actor {
 	return &httpConnActor{
-		grp: group,
+		grp:  group,
+		brk:  newBroker(),
+		msgs: arraylist.New(),
 	}
 }
 
-func (state *httpConnActor) SetRegistry(reg Registry) {
+func (state *httpConnActor) Init(reg Registry) {
 	state.reg = reg
 }
 
 func (state *httpConnActor) Receive(ctx actor.Context) {
-	switch ctx.Message().(type) {
+	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		props := actor.FromProducer(newBrokerActor).
+		props := actor.FromInstance(newBrokerActor(state.brk)).
 			WithMiddleware(plugin.Use(RegistryPlugin()))
 		pid, err := ctx.SpawnNamed(props, "broker")
 		if err != nil {
+			log.Error(err.Error())
 		}
 
 		state.brkPID = pid
@@ -39,6 +48,24 @@ func (state *httpConnActor) Receive(ctx actor.Context) {
 		state.grp.POST("/push", state.push)
 		state.grp.POST("/pull", state.pull)
 	case Event:
+		evt, err := state.reg.FromMessage(msg)
+		if err != nil {
+			log.Error(err.Error())
+
+			return
+		}
+
+		sub := state.brk.Contains(evt.Type)
+
+		log.Debug("Event",
+			zap.String("conn", "ws"),
+			zap.String("type", evt.Type),
+			zap.Bool("sub", sub),
+		)
+
+		if sub {
+			state.msgs.Add(evt)
+		}
 	}
 }
 
@@ -47,6 +74,11 @@ func (state *httpConnActor) push(c echo.Context) error {
 	if err := c.Bind(cmd); err != nil {
 		return err
 	}
+
+	log.Debug("Command",
+		zap.String("conn", "http"),
+		zap.String("type", cmd.Type),
+	)
 
 	msg, err := state.reg.ToMessage(cmd)
 	if err != nil {
@@ -64,9 +96,25 @@ func (state *httpConnActor) push(c echo.Context) error {
 		return err
 	}
 
+	sub := state.brk.Contains(evt.Type)
+
+	log.Debug("Event",
+		zap.String("conn", "http"),
+		zap.String("type", evt.Type),
+		zap.Bool("sub", sub),
+	)
+
+	if !sub {
+		return errors.New("no subscription event: " + evt.Type)
+	}
+
 	return c.JSON(http.StatusOK, evt)
 }
 
-func (*httpConnActor) pull(c echo.Context) error {
-	return nil
+func (state *httpConnActor) pull(c echo.Context) error {
+	msgs := state.msgs.Values()
+
+	state.msgs.Clear()
+
+	return c.JSON(http.StatusOK, msgs)
 }

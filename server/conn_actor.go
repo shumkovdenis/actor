@@ -47,5 +47,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 		state.sessionPID = actor.NewLocalPID("server/sessions/" + msg.SessionID)
 
 		ctx.Respond(&LoginSuccess{})
+	case Command:
+		state.sessionPID.Request(msg, ctx.Sender())
 	}
 }

@@ -7,9 +7,9 @@ type brokerActor struct {
 	connPID *actor.PID
 }
 
-func newBrokerActor() actor.Actor {
+func newBrokerActor(brk Broker) actor.Actor {
 	return &brokerActor{
-		brk: newBroker(),
+		brk: brk,
 	}
 }
 
@@ -30,6 +30,7 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		props := actor.FromProducer(newConnActor)
 		pid, err := ctx.SpawnNamed(props, "conn")
 		if err != nil {
+			log.Error(err.Error())
 		}
 
 		state.connPID = pid
@@ -42,11 +43,8 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 
 		ctx.Respond(&UnsubscribeSuccess{msg.Topics})
 	case Command:
-		// state.connPID.Request(msg, ctx.Sender())
-		ctx.Respond(&Fail{"No proccess"})
-		// case Event:
-		// 	if state.brk.Contains(msg.Event()) {
-		// 		ctx.Parent().Tell(msg)
-		// 	}
+		state.connPID.Request(msg, ctx.Sender())
+	case Event:
+		ctx.Parent().Tell(msg)
 	}
 }
