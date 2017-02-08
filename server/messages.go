@@ -108,9 +108,7 @@ type UseSessionSuccess struct {
 
 type UseSessionFail error
 
-type CreateRoom struct {
-	Conf *RoomConf
-}
+type CreateRoom struct{}
 
 type CreateRoomSuccess struct {
 	Room *Room
@@ -119,7 +117,7 @@ type CreateRoomSuccess struct {
 type CreateRoomFail error
 
 type JoinRoom struct {
-	RoomID string
+	Session *Session
 }
 
 type JoinRoomSuccess struct{}

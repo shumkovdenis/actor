@@ -1,32 +1,30 @@
 package server
 
-import (
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/AsynkronIT/protoactor-go/plugin"
-)
+import "github.com/AsynkronIT/protoactor-go/actor"
 
 type sessionManagerActor struct {
-	mng SessionManager
+	*sessionManager
+	// mng SessionManager
 }
 
 func newSessionManagerActor() actor.Actor {
 	return &sessionManagerActor{
-		mng: newSessionManager(),
+		sessionManager: newSessionManager(),
+		// mng: newSessionManager(),
 	}
 }
 
 func (state *sessionManagerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *CreateSession:
-		session, err := state.mng.CreateSession(msg.Conf)
+		session, err := state.Create(msg.Conf)
 		if err != nil {
 			ctx.Respond(CreateSessionFail(err))
 
 			return
 		}
 
-		props := actor.FromProducer(newSessionActor).
-			WithMiddleware(plugin.Use(RegistryPlugin()))
+		props := actor.FromInstance(newSessionActor(session))
 
 		_, err = ctx.SpawnNamed(props, session.ID)
 		if err != nil {
@@ -39,12 +37,40 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 
 		ctx.Respond(&CreateSessionSuccess{session})
 	case *UseSession:
-		if err := state.mng.UseSession(msg.SessionID); err != nil {
+		if session, err := state.Get(msg.SessionID); err != nil {
 			ctx.Respond(UseSessionFail(err))
 
 			return
 		}
 
-		ctx.Respond(&UseSessionSuccess{})
+		/*case *CreateSession:
+			session, err := state.mng.CreateSession(msg.Conf)
+			if err != nil {
+				ctx.Respond(CreateSessionFail(err))
+
+				return
+			}
+
+			props := actor.FromProducer(newSessionActor).
+				WithMiddleware(plugin.Use(RegistryPlugin()))
+
+			_, err = ctx.SpawnNamed(props, session.ID)
+			if err != nil {
+				log.Error(err.Error())
+
+				ctx.Respond(CreateSessionFail(err))
+
+				return
+			}
+
+			ctx.Respond(&CreateSessionSuccess{session})
+		case *UseSession:
+			if err := state.mng.UseSession(msg.SessionID); err != nil {
+				ctx.Respond(UseSessionFail(err))
+
+				return
+			}
+
+			ctx.Respond(&UseSessionSuccess{})*/
 	}
 }

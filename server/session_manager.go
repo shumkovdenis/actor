@@ -1,36 +1,42 @@
 package server
 
 import (
-	"fmt"
-
 	"github.com/emirpasic/gods/maps/treemap"
-	uuid "github.com/satori/go.uuid"
 	"github.com/uber-go/zap"
 )
 
-const (
-	SessionNotFound = iota
-	SessionUsed
-)
-
-type SessionError struct {
-	Code int
+type sessionManager struct {
+	sessions *treemap.Map
 }
 
-func (e *SessionError) Error() string {
-	return fmt.Sprintf("session manager error: %d", e.Code)
+func newSessionManager() *sessionManager {
+	return &sessionManager{
+		sessions: treemap.NewWithStringComparator(),
+	}
 }
 
-type SessionConf struct {
-	RoomID string `json:"room_id"`
+func (m *sessionManager) Create(conf *SessionConf) *Session {
+	session := newSession(conf)
+
+	m.sessions.Put(id, session)
+
+	return session, nil
 }
 
-type Session struct {
-	ID   string       `json:"id"`
-	Used bool         `json:"used"`
-	Conf *SessionConf `json:"conf"`
+func (m *sessionManager) Get(id string) (*Session, error) {
+	session, ok := m.rooms.Get(id)
+	if !ok {
+		log.Warn("get session: session not found",
+			zap.String("session", id),
+		)
+
+		return nil, &SessionError{SessionNotFound}
+	}
+
+	return session.(*Session), nil
 }
 
+/*
 type SessionManager interface {
 	CreateSession(conf *SessionConf) (*Session, error)
 	UseSession(id string) error
@@ -79,3 +85,4 @@ func (m *sessionManager) UseSession(id string) error {
 
 	return nil
 }
+*/

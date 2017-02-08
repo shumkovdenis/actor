@@ -1,36 +1,42 @@
 package server
 
 import (
-	"fmt"
-
 	"github.com/emirpasic/gods/maps/treemap"
-	uuid "github.com/satori/go.uuid"
 	"github.com/uber-go/zap"
 )
 
-const (
-	RoomNotFound = iota
-	RoomFull
-)
-
-type RoomError struct {
-	Code int
+type roomManager struct {
+	rooms *treemap.Map
 }
 
-func (e *RoomError) Error() string {
-	return fmt.Sprintf("room manager error: %d", e.Code)
+func newRoomManager() *roomManager {
+	return &roomManager{
+		rooms: treemap.NewWithStringComparator(),
+	}
 }
 
-type RoomConf struct {
-	MaxPlaces  int `json:"max_places"`
-	BusyPlaces int `json:"busy_places"`
+func (m *roomManager) Create() *Room {
+	room := newRoom()
+
+	m.rooms.Put(id, room)
+
+	return room, nil
 }
 
-type Room struct {
-	ID   string    `json:"id"`
-	Conf *RoomConf `json:"conf"`
+func (m *roomManager) Get(id string) (*Room, error) {
+	room, ok := m.rooms.Get(id)
+	if !ok {
+		log.Warn("get room: room not found",
+			zap.String("room", id),
+		)
+
+		return nil, &RoomError{RoomNotFound}
+	}
+
+	return room.(*Room), nil
 }
 
+/*
 type RoomManager interface {
 	Create(conf *RoomConf) (*Room, error)
 	Get(id string) (*Room, error)
@@ -107,3 +113,4 @@ func (m *roomManager) LeaveRoom(id string) error {
 
 	return nil
 }
+*/

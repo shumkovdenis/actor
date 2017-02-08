@@ -46,7 +46,7 @@ func (state *apiActor) Receive(ctx actor.Context) {
 }
 
 func (state *apiActor) createSession(c echo.Context) error {
-	conf := &SessionConf{}
+	conf := newSessionConf()
 
 	if err := c.Bind(conf); err != nil {
 		return c.JSON(http.StatusBadRequest, ErrParsing)
@@ -58,23 +58,27 @@ func (state *apiActor) createSession(c echo.Context) error {
 		return err
 	}
 
-	if fail, ok := res.(CreateRoomFail); ok {
+	if fail, ok := res.(CreateSessionFail); ok {
 		return c.JSON(http.StatusBadRequest, &ClientError{fail.Error()})
 	}
 
-	success := res.(*CreateRoomSuccess)
+	session := res.(CreateSessionSuccess).Session
 
-	return c.JSON(http.StatusOK, res)
+	future = state.roomMng.RequestFuture(&JoinRoom{session}, 1*time.Second)
+	res, err = future.Result()
+	if err != nil {
+		return err
+	}
+
+	if fail, ok := res.(JoinRoomFail); ok {
+		return c.JSON(http.StatusBadRequest, &ClientError{fail.Error()})
+	}
+
+	return c.JSON(http.StatusOK, session)
 }
 
 func (state *apiActor) createRoom(c echo.Context) error {
-	conf := &RoomConf{}
-
-	if err := c.Bind(conf); err != nil {
-		return c.JSON(http.StatusBadRequest, ErrParsing)
-	}
-
-	future := state.roomMng.RequestFuture(&CreateRoom{conf}, 1*time.Second)
+	future := state.roomMng.RequestFuture(&CreateRoom{}, 1*time.Second)
 	res, err := future.Result()
 	if err != nil {
 		return err
@@ -84,7 +88,7 @@ func (state *apiActor) createRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, &ClientError{fail.Error()})
 	}
 
-	success := res.(*CreateRoomSuccess)
+	room := res.(*CreateRoomSuccess).Room
 
-	return c.JSON(http.StatusOK, success.Room)
+	return c.JSON(http.StatusOK, room)
 }

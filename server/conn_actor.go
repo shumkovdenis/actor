@@ -28,7 +28,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 	case *Login:
-		pid := actor.NewLocalPID("server/sessions")
+		pid := actor.NewLocalPID("api/sessions")
 
 		future := pid.RequestFuture(&UseSession{msg.SessionID}, 1*time.Second)
 		res, err := future.Result()
@@ -44,7 +44,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 			return
 		}
 
-		state.sessionPID = actor.NewLocalPID("server/sessions/" + msg.SessionID)
+		state.sessionPID = actor.NewLocalPID("api/sessions/" + msg.SessionID)
 
 		ctx.Respond(&LoginSuccess{})
 	case Command:

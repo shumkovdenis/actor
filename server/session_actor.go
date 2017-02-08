@@ -24,10 +24,13 @@ func (*Update) Event() string {
 }
 
 type sessionActor struct {
+	*Session
 }
 
-func newSessionActor() actor.Actor {
-	return &sessionActor{}
+func newSessionActor(session *Session) actor.Actor {
+	return &sessionActor{
+		Session: session,
+	}
 }
 
 func (*sessionActor) Name() string {
