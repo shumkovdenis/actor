@@ -79,7 +79,7 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 
 			log.Error(err.Error())
 
-			ctx.Parent().Tell(&Fail{err.Error()})
+			// ctx.Self().Tell(&Fail{err.Error()})
 
 			continue
 		}
@@ -93,7 +93,7 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 		if err != nil {
 			log.Error(err.Error())
 
-			ctx.Parent().Tell(&Fail{err.Error()})
+			// ctx.Self().Tell(&Fail{err.Error()})
 
 			continue
 		}

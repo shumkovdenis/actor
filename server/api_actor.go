@@ -11,6 +11,7 @@ import (
 type apiActor struct {
 	grp       *echo.Group
 	sesMngPID *actor.PID
+	roomMng   *actor.PID
 }
 
 func newAPIActor(group *echo.Group) actor.Actor {
@@ -25,28 +26,65 @@ func (state *apiActor) Receive(ctx actor.Context) {
 		props := actor.FromProducer(newSessionManagerActor)
 		pid, err := ctx.SpawnNamed(props, "sessions")
 		if err != nil {
+			log.Error(err.Error())
+		} else {
+			state.sesMngPID = pid
+
+			state.grp.POST("/sessions", state.createSession)
 		}
 
-		state.sesMngPID = pid
+		props = actor.FromProducer(newRoomManagerActor)
+		pid, err = ctx.SpawnNamed(props, "rooms")
+		if err != nil {
+			log.Error(err.Error())
+		} else {
+			state.roomMng = pid
 
-		state.grp.POST("/sessions", state.createSession)
+			state.grp.POST("/rooms", state.createRoom)
+		}
 	}
 }
 
 func (state *apiActor) createSession(c echo.Context) error {
-	session := &struct {
-		RoomID string `json:"room_id"`
-	}{}
+	conf := &SessionConf{}
 
-	if err := c.Bind(session); err != nil {
-		return err
+	if err := c.Bind(conf); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrParsing)
 	}
 
-	future := state.sesMngPID.RequestFuture(&CreateSession{}, 1*time.Second)
+	future := state.sesMngPID.RequestFuture(&CreateSession{conf}, 1*time.Second)
 	res, err := future.Result()
 	if err != nil {
 		return err
 	}
 
+	if fail, ok := res.(CreateRoomFail); ok {
+		return c.JSON(http.StatusBadRequest, &ClientError{fail.Error()})
+	}
+
+	success := res.(*CreateRoomSuccess)
+
 	return c.JSON(http.StatusOK, res)
+}
+
+func (state *apiActor) createRoom(c echo.Context) error {
+	conf := &RoomConf{}
+
+	if err := c.Bind(conf); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrParsing)
+	}
+
+	future := state.roomMng.RequestFuture(&CreateRoom{conf}, 1*time.Second)
+	res, err := future.Result()
+	if err != nil {
+		return err
+	}
+
+	if fail, ok := res.(CreateRoomFail); ok {
+		return c.JSON(http.StatusBadRequest, &ClientError{fail.Error()})
+	}
+
+	success := res.(*CreateRoomSuccess)
+
+	return c.JSON(http.StatusOK, success.Room)
 }

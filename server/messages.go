@@ -90,15 +90,14 @@ func (*LoginFail) Event() string {
 }
 
 type CreateSession struct {
+	Conf *SessionConf
 }
 
 type CreateSessionSuccess struct {
-	SessionID string `json:"session_id"`
+	Session *Session
 }
 
-type CreateSessionFail struct {
-	Message string `json:"message"`
-}
+type CreateSessionFail error
 
 type UseSession struct {
 	SessionID string
@@ -107,14 +106,30 @@ type UseSession struct {
 type UseSessionSuccess struct {
 }
 
-type UseSessionFail struct {
-	Message string `json:"message"`
+type UseSessionFail error
+
+type CreateRoom struct {
+	Conf *RoomConf
 }
 
-type Fail struct {
-	Message string `json:"message"`
+type CreateRoomSuccess struct {
+	Room *Room
 }
 
-func (*Fail) Event() string {
-	return "event.fail"
+type CreateRoomFail error
+
+type JoinRoom struct {
+	RoomID string
 }
+
+type JoinRoomSuccess struct{}
+
+type JoinRoomFail error
+
+type LeaveRoom struct {
+	RoomID string
+}
+
+type LeaveRoomSuccess struct{}
+
+type LeaveRoomFail error

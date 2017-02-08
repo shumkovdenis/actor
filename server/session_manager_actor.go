@@ -3,49 +3,47 @@ package server
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/plugin"
-	"github.com/emirpasic/gods/maps/hashmap"
-	"github.com/emirpasic/gods/maps/treemap"
-	uuid "github.com/satori/go.uuid"
 )
 
 type sessionManagerActor struct {
-	sessions    *treemap.Map
-	connections *hashmap.Map
+	mng SessionManager
 }
 
 func newSessionManagerActor() actor.Actor {
 	return &sessionManagerActor{
-		sessions:    treemap.NewWithStringComparator(),
-		connections: hashmap.New(),
+		mng: newSessionManager(),
 	}
 }
 
 func (state *sessionManagerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *CreateSession:
-		id := uuid.NewV4().String()
+		session, err := state.mng.CreateSession(msg.Conf)
+		if err != nil {
+			ctx.Respond(CreateSessionFail(err))
+
+			return
+		}
 
 		props := actor.FromProducer(newSessionActor).
 			WithMiddleware(plugin.Use(RegistryPlugin()))
-		pid, err := ctx.SpawnNamed(props, id)
+
+		_, err = ctx.SpawnNamed(props, session.ID)
 		if err != nil {
-			ctx.Respond(&CreateSessionFail{err.Error()})
+			log.Error(err.Error())
+
+			ctx.Respond(CreateSessionFail(err))
 
 			return
 		}
 
-		state.sessions.Put(id, pid)
-
-		ctx.Respond(&CreateSessionSuccess{id})
+		ctx.Respond(&CreateSessionSuccess{session})
 	case *UseSession:
-		pid, ok := state.sessions.Get(msg.SessionID)
-		if !ok {
-			ctx.Respond(&UseSessionFail{"Session not found"})
+		if err := state.mng.UseSession(msg.SessionID); err != nil {
+			ctx.Respond(UseSessionFail(err))
 
 			return
 		}
-
-		state.connections.Put(ctx.Sender(), pid)
 
 		ctx.Respond(&UseSessionSuccess{})
 	}
