@@ -35,7 +35,7 @@ func (state *roomManagerActor) Receive(ctx actor.Context) {
 	case *GetRoom:
 		pid, ok := state.rooms.Get(msg.RoomID)
 		if !ok {
-			ctx.Respond(&Fail{Code: RoomNotFound})
+			ctx.Respond(newError(ErrRoomNotFound))
 			return
 		}
 

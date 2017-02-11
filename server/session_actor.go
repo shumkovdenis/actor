@@ -55,6 +55,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 		ctx.Respond(success)
 	case *Ping:
 		ctx.Respond(&Pong{})
+	case Command:
+		state.roomPID.Request(msg, ctx.Sender())
 	}
 }
 

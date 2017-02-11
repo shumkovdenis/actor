@@ -55,14 +55,13 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 		if err := state.conn.ReadJSON(cmd); err != nil {
 			if websocket.IsUnexpectedCloseError(err) {
 				log.Error(err.Error())
-
 				return
 			}
 
 			log.Error(err.Error())
 
-			ctx.Self().Tell(&Fail{Message: err.Error()})
-
+			fail := &Fail{newErrorWrap(ErrReadJSON, err)}
+			ctx.Self().Tell(fail)
 			continue
 		}
 
@@ -75,8 +74,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 		if err != nil {
 			log.Error(err.Error())
 
-			ctx.Self().Tell(&Fail{Message: err.Error()})
-
+			fail := &Fail{newErrorWrap(ErrToMessage, err)}
+			ctx.Self().Tell(fail)
 			continue
 		}
 
