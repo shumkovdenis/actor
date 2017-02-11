@@ -1,40 +1,35 @@
 package server
 
-import (
-	"github.com/emirpasic/gods/maps/treemap"
-	"github.com/uber-go/zap"
-)
+// type roomManager struct {
+// 	rooms *treemap.Map
+// }
 
-type roomManager struct {
-	rooms *treemap.Map
-}
+// func newRoomManager() *roomManager {
+// 	return &roomManager{
+// 		rooms: treemap.NewWithStringComparator(),
+// 	}
+// }
 
-func newRoomManager() *roomManager {
-	return &roomManager{
-		rooms: treemap.NewWithStringComparator(),
-	}
-}
+// func (m *roomManager) Create() *Room {
+// 	room := newRoom()
 
-func (m *roomManager) Create() *Room {
-	room := newRoom()
+// 	m.rooms.Put(id, room)
 
-	m.rooms.Put(id, room)
+// 	return room, nil
+// }
 
-	return room, nil
-}
+// func (m *roomManager) Get(id string) (*Room, error) {
+// 	room, ok := m.rooms.Get(id)
+// 	if !ok {
+// 		log.Warn("get room: room not found",
+// 			zap.String("room", id),
+// 		)
 
-func (m *roomManager) Get(id string) (*Room, error) {
-	room, ok := m.rooms.Get(id)
-	if !ok {
-		log.Warn("get room: room not found",
-			zap.String("room", id),
-		)
+// 		return nil, &RoomError{RoomNotFound}
+// 	}
 
-		return nil, &RoomError{RoomNotFound}
-	}
-
-	return room.(*Room), nil
-}
+// 	return room.(*Room), nil
+// }
 
 /*
 type RoomManager interface {

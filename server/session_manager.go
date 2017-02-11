@@ -1,11 +1,6 @@
 package server
 
-import (
-	"github.com/emirpasic/gods/maps/treemap"
-	"github.com/uber-go/zap"
-)
-
-type sessionManager struct {
+/*type sessionManager struct {
 	sessions *treemap.Map
 }
 
@@ -35,6 +30,7 @@ func (m *sessionManager) Get(id string) (*Session, error) {
 
 	return session.(*Session), nil
 }
+*/
 
 /*
 type SessionManager interface {

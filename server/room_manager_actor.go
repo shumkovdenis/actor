@@ -1,82 +1,64 @@
 package server
 
-import "github.com/AsynkronIT/protoactor-go/actor"
+import (
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/emirpasic/gods/maps/treemap"
+)
 
 type roomManagerActor struct {
-	*roomManager
+	rooms *treemap.Map
 }
 
 func newRoomManagerActor() actor.Actor {
 	return &roomManagerActor{
-		roomManager: newRoomManager(),
+		rooms: treemap.NewWithStringComparator(),
 	}
 }
 
 func (state *roomManagerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *CreateRoom:
-		room := state.Create()
+		id := msg.RoomID
 
-		ctx.Respond(&CreateRoomSuccess{room})
-	case *JoinRoom:
-		room, err := state.Get(msg.Session.Conf.RoomID)
-		if err != nil {
-			ctx.Respond(JoinRoomFail(err))
+		props := actor.FromProducer(newRoomActor)
+		pid, _ := ctx.SpawnNamed(props, id)
 
+		state.rooms.Put(id, pid)
+
+		success := &CreateRoomSuccess{
+			Room: &Room{
+				ID: id,
+			},
+		}
+
+		ctx.Respond(success)
+	case *GetRoom:
+		pid, ok := state.rooms.Get(msg.RoomID)
+		if !ok {
+			ctx.Respond(&Fail{Code: RoomNotFound})
 			return
 		}
 
-		var pid *actor.PID
-		if room.Used() {
-			pid := actor.NewLocalPID("api/rooms/" + room.ID)
-		} else {
-			props := actor.FromInstance(newRoomActor(room))
-
-			pid, err := ctx.SpawnNamed(props, room.ID)
-			if err != nil {
-				log.Error(err.Error())
-
-				ctx.Respond(JoinRoomFail(err))
-
-				return
-			}
+		success := &GetRoomSuccess{
+			RoomPID: pid.(*actor.PID),
 		}
 
-		pid.Request(msg, ctx.Sender())
-		/*case *CreateRoom:
-			room, err := state.mng.Create(msg.Conf)
-			if err != nil {
-				ctx.Respond(CreateRoomFail(err))
-
-				return
-			}
-
-			props := actor.FromProducer(newRoomActor)
-			_, err = ctx.SpawnNamed(props, room.ID)
-			if err != nil {
-				log.Error(err.Error())
-
-				ctx.Respond(CreateRoomFail(err))
-
-				return
-			}
-
-			ctx.Respond(&CreateRoomSuccess{room})
-		case *JoinRoom:
-			if err := state.mng.JoinRoom(msg.RoomID); err != nil {
-				ctx.Respond(JoinRoomFail(err))
-
-				return
-			}
-
-			ctx.Respond(&JoinRoomSuccess{})
-		case *LeaveRoom:
-			if err := state.mng.LeaveRoom(msg.RoomID); err != nil {
-				ctx.Respond(LeaveRoomFail(err))
-
-				return
-			}
-
-			ctx.Respond(&LeaveRoomSuccess{})*/
+		ctx.Respond(success)
 	}
+}
+
+type CreateRoom struct {
+	RoomID string
+}
+
+type CreateRoomSuccess struct {
+	Room *Room
+}
+
+type GetRoom struct {
+	RoomID string
+}
+
+type GetRoomSuccess struct {
+	RoomPID *actor.PID
 }

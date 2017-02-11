@@ -5,7 +5,6 @@ import (
 
 	console "github.com/AsynkronIT/goconsole"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/AsynkronIT/protoactor-go/plugin"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
@@ -15,15 +14,15 @@ import (
 
 var log = logger.Get()
 
-var regPlugin *registryPlugin
+// var regPlugin *registryPlugin
 
-func init() {
-	regPlugin = newRegistryPlugin()
-}
+// func init() {
+// 	regPlugin = newRegistryPlugin()
+// }
 
-func RegistryPlugin() *registryPlugin {
-	return regPlugin
-}
+// func RegistryPlugin() *registryPlugin {
+// 	return regPlugin
+// }
 
 func Start() error {
 	log.Info("Start server",
@@ -33,8 +32,15 @@ func Start() error {
 
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-	props := actor.FromProducer(newServerActor).
-		WithMiddleware(plugin.Use(RegistryPlugin()))
+	var props *actor.Props
+
+	props = actor.FromProducer(newRoomManagerActor)
+	actor.SpawnNamed(props, "rooms")
+
+	props = actor.FromProducer(newSessionManagerActor)
+	actor.SpawnNamed(props, "sessions")
+
+	props = actor.FromProducer(newServerActor)
 	actor.SpawnNamed(props, "server")
 
 	console.ReadLine()

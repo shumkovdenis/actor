@@ -1,5 +1,9 @@
 package server
 
+import (
+	"fmt"
+)
+
 type Command interface {
 	Command() string
 }
@@ -89,41 +93,6 @@ func (*LoginFail) Event() string {
 	return "event.login.fail"
 }
 
-type CreateSession struct {
-	Conf *SessionConf
-}
-
-type CreateSessionSuccess struct {
-	Session *Session
-}
-
-type CreateSessionFail error
-
-type UseSession struct {
-	SessionID string
-}
-
-type UseSessionSuccess struct {
-}
-
-type UseSessionFail error
-
-type CreateRoom struct{}
-
-type CreateRoomSuccess struct {
-	Room *Room
-}
-
-type CreateRoomFail error
-
-type JoinRoom struct {
-	Session *Session
-}
-
-type JoinRoomSuccess struct{}
-
-type JoinRoomFail error
-
 type LeaveRoom struct {
 	RoomID string
 }
@@ -131,3 +100,27 @@ type LeaveRoom struct {
 type LeaveRoomSuccess struct{}
 
 type LeaveRoomFail error
+
+type Success struct{}
+
+type Fail struct {
+	Code    int
+	Message string
+}
+
+func (f *Fail) Error() string {
+	return fmt.Sprintf("message: %s (code: %d)", f.Message, f.Code)
+}
+
+func (*Fail) Event() string {
+	return "event.fail"
+}
+
+const (
+	ErrorCode = iota
+	RoomNotFound
+	RoomFull
+
+	SessionNotFound
+	// SessionUsed
+)

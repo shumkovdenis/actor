@@ -24,35 +24,43 @@ func (*Update) Event() string {
 }
 
 type sessionActor struct {
-	*Session
+	roomPID *actor.PID
+	connPID *actor.PID
 }
 
-func newSessionActor(session *Session) actor.Actor {
+func newSessionActor(roomPID *actor.PID) actor.Actor {
 	return &sessionActor{
-		Session: session,
+		roomPID: roomPID,
 	}
 }
 
-func (*sessionActor) Name() string {
-	return "sessionActor"
-}
+// func (*sessionActor) Name() string {
+// 	return "sessionActor"
+// }
 
-func (state *sessionActor) Commands() []Command {
-	return []Command{
-		&Ping{},
-	}
-}
+// func (state *sessionActor) Commands() []Command {
+// 	return []Command{
+// 		&Ping{},
+// 	}
+// }
 
 func (state *sessionActor) Receive(ctx actor.Context) {
-	switch ctx.Message().(type) {
+	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		// go func() {
-		// 	ticker := time.Tick(5 * time.Second)
-		// 	for _ = range ticker {
-		// 		ctx.Parent().Tell(&Update{})
-		// 	}
-		// }()
+	case *UseSession:
+		state.connPID = msg.ConnPID
+
+		success := &UseSessionSuccess{}
+
+		ctx.Respond(success)
 	case *Ping:
 		ctx.Respond(&Pong{})
 	}
+}
+
+type UseSession struct {
+	ConnPID *actor.PID
+}
+
+type UseSessionSuccess struct {
 }

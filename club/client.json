@@ -15,19 +15,17 @@
             }
         },
         "#login": {
-            "type": "command.login"
+            "type": "command.login",
+            "data": {
+                "session_id": "76506b9f-8f28-4ef7-9e24-82b7b3f7406a"
+            }
         },
-        "#update_check": {
-            "type": "command.update.check"
-        },
-        "#update_download": {
-            "type": "command.update.download"
-        },
-        "#update_install": {
-            "type": "command.update.install"
+        "#ping": {
+            "type": "command.ping"
         }
     },
     "events": {
-        
+        "event.subscribe.success": "#login",
+        "event.login.success": "#ping"
     }
 }

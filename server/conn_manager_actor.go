@@ -1,10 +1,7 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/AsynkronIT/protoactor-go/plugin"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
@@ -25,35 +22,35 @@ func newConnManagerActor(group *echo.Group) actor.Actor {
 func (state *connManagerActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		state.grp.GET("/http", state.http(ctx))
+		// state.grp.GET("/http", state.http(ctx))
 		state.grp.GET("/ws", state.ws(ctx))
 
 		log.Info("Conn manager started")
 	}
 }
 
-func (state *connManagerActor) http(ctx actor.Context) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id := uuid.NewV4().String()
+// func (state *connManagerActor) http(ctx actor.Context) echo.HandlerFunc {
+// 	return func(c echo.Context) error {
+// 		id := uuid.NewV4().String()
 
-		group := state.grp.Group("/" + id)
+// 		group := state.grp.Group("/" + id)
 
-		props := actor.FromInstance(newHTTPConnActor(group)).
-			WithMiddleware(plugin.Use(RegistryPlugin()))
-		_, err := ctx.SpawnNamed(props, id)
-		if err != nil {
-			return err
-		}
+// 		props := actor.FromInstance(newHTTPConnActor(group)).
+// 			WithMiddleware(plugin.Use(RegistryPlugin()))
+// 		_, err := ctx.SpawnNamed(props, id)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		resp := &struct {
-			ConnectionID string `json:"connection_id"`
-		}{
-			ConnectionID: id,
-		}
+// 		resp := &struct {
+// 			ConnectionID string `json:"connection_id"`
+// 		}{
+// 			ConnectionID: id,
+// 		}
 
-		return c.JSON(http.StatusOK, resp)
-	}
-}
+// 		return c.JSON(http.StatusOK, resp)
+// 	}
+// }
 
 func (state *connManagerActor) ws(ctx actor.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -66,8 +63,7 @@ func (state *connManagerActor) ws(ctx actor.Context) echo.HandlerFunc {
 
 		id := uuid.NewV4().String()
 
-		props := actor.FromInstance(newWSConnActor(conn)).
-			WithMiddleware(plugin.Use(RegistryPlugin()))
+		props := actor.FromInstance(newWSConnActor(conn))
 		_, err = ctx.SpawnNamed(props, id)
 		if err != nil {
 			log.Error(err.Error())

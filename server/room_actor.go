@@ -1,6 +1,9 @@
 package server
 
-import "github.com/AsynkronIT/protoactor-go/actor"
+import (
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/emirpasic/gods/sets/hashset"
+)
 
 // type Action struct{}
 
@@ -15,25 +18,34 @@ import "github.com/AsynkronIT/protoactor-go/actor"
 // }
 
 type roomActor struct {
-	*Room
-	// sessions []*actor.PID
+	sessions *hashset.Set
 }
 
-func newRoomActor(room *Room) actor.Actor {
+func newRoomActor() actor.Actor {
 	return &roomActor{
-		Room: room,
-		// sessions: make([]*actor.PID, 0, 1),
+		sessions: hashset.New(),
 	}
 }
 
 func (state *roomActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *JoinRoom:
-		if err := state.Join(msg.Session); err != nil {
-			ctx.Respond(JoinRoomFail(err))
-
+		if state.sessions.Size() == 2 {
+			ctx.Respond(&Fail{Code: RoomFull})
 			return
 		}
 
-		ctx.Respond(&JoinRoomSuccess{})
+		state.sessions.Add(msg.SessionPID)
+
+		success := &JoinRoomSuccess{}
+
+		ctx.Respond(success)
+	}
+}
+
+type JoinRoom struct {
+	SessionPID *actor.PID
+}
+
+type JoinRoomSuccess struct {
 }

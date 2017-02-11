@@ -1,76 +1,103 @@
 package server
 
-import "github.com/AsynkronIT/protoactor-go/actor"
+import (
+	"time"
+
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/emirpasic/gods/maps/treemap"
+)
 
 type sessionManagerActor struct {
-	*sessionManager
-	// mng SessionManager
+	sessions    *treemap.Map
+	roomManager *actor.PID
 }
 
 func newSessionManagerActor() actor.Actor {
 	return &sessionManagerActor{
-		sessionManager: newSessionManager(),
-		// mng: newSessionManager(),
+		sessions: treemap.NewWithStringComparator(),
 	}
 }
 
 func (state *sessionManagerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
+	case *actor.Started:
+		state.roomManager = actor.NewLocalPID("rooms")
 	case *CreateSession:
-		session, err := state.Create(msg.Conf)
+		getRoom := &GetRoom{
+			RoomID: msg.RoomID,
+		}
+
+		future := state.roomManager.RequestFuture(getRoom, 1*time.Second)
+		res, err := future.Result()
 		if err != nil {
-			ctx.Respond(CreateSessionFail(err))
-
+			ctx.Respond(&Fail{Message: err.Error()})
 			return
 		}
 
-		props := actor.FromInstance(newSessionActor(session))
+		if err, ok := res.(error); ok {
+			ctx.Respond(err)
+			return
+		}
 
-		_, err = ctx.SpawnNamed(props, session.ID)
+		roomPID := res.(*GetRoomSuccess).RoomPID
+
+		props := actor.FromInstance(newSessionActor(roomPID))
+		sessionPID, _ := ctx.SpawnNamed(props, msg.SessionID)
+
+		joinRoom := &JoinRoom{
+			SessionPID: sessionPID,
+		}
+
+		future = roomPID.RequestFuture(joinRoom, 1*time.Second)
+		res, err = future.Result()
 		if err != nil {
-			log.Error(err.Error())
-
-			ctx.Respond(CreateSessionFail(err))
-
+			ctx.Respond(&Fail{Message: err.Error()})
 			return
 		}
 
-		ctx.Respond(&CreateSessionSuccess{session})
-	case *UseSession:
-		if session, err := state.Get(msg.SessionID); err != nil {
-			ctx.Respond(UseSessionFail(err))
-
+		if err, ok := res.(error); ok {
+			ctx.Respond(err)
 			return
 		}
 
-		/*case *CreateSession:
-			session, err := state.mng.CreateSession(msg.Conf)
-			if err != nil {
-				ctx.Respond(CreateSessionFail(err))
+		state.sessions.Put(msg.SessionID, sessionPID)
 
-				return
-			}
+		success := &CreateSessionSuccess{
+			Session: &Session{
+				ID:     msg.SessionID,
+				RoomID: msg.RoomID,
+			},
+		}
 
-			props := actor.FromProducer(newSessionActor).
-				WithMiddleware(plugin.Use(RegistryPlugin()))
+		ctx.Respond(success)
+	case *GetSession:
+		pid, ok := state.sessions.Get(msg.SessionID)
+		if !ok {
+			ctx.Respond(&Fail{Code: SessionNotFound})
+			return
+		}
 
-			_, err = ctx.SpawnNamed(props, session.ID)
-			if err != nil {
-				log.Error(err.Error())
+		success := &GetSessionSuccess{
+			SessionPID: pid.(*actor.PID),
+		}
 
-				ctx.Respond(CreateSessionFail(err))
-
-				return
-			}
-
-			ctx.Respond(&CreateSessionSuccess{session})
-		case *UseSession:
-			if err := state.mng.UseSession(msg.SessionID); err != nil {
-				ctx.Respond(UseSessionFail(err))
-
-				return
-			}
-
-			ctx.Respond(&UseSessionSuccess{})*/
+		ctx.Respond(success)
 	}
+}
+
+type CreateSession struct {
+	SessionID string
+	RoomID    string `json:"room_id"`
+}
+
+type CreateSessionSuccess struct {
+	Session *Session
+}
+
+type GetSession struct {
+	SessionID string
+}
+
+type GetSessionSuccess struct {
+	SessionPID *actor.PID
 }

@@ -34,17 +34,13 @@ func (state *serverActor) Receive(ctx actor.Context) {
 		e := echo.New()
 
 		props := actor.FromInstance(newAPIActor(e.Group("/api")))
-		_, err := ctx.SpawnNamed(props, "api")
-		if err != nil {
-		}
+		ctx.SpawnNamed(props, "api")
 
 		props = actor.FromInstance(newConnManagerActor(e.Group("/conn")))
-		_, err = ctx.SpawnNamed(props, "conns")
-		if err != nil {
-		}
+		ctx.SpawnNamed(props, "conns")
 
-		go func() {
-			e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", conf.Port)))
-		}()
+		// go func() {
+		e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", conf.Port)))
+		// }()
 	}
 }

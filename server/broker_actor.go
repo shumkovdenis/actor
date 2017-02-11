@@ -3,24 +3,13 @@ package server
 import "github.com/AsynkronIT/protoactor-go/actor"
 
 type brokerActor struct {
-	brk     Broker
+	broker  Broker
 	connPID *actor.PID
 }
 
-func newBrokerActor(brk Broker) actor.Actor {
+func newBrokerActor() actor.Actor {
 	return &brokerActor{
-		brk: brk,
-	}
-}
-
-func (*brokerActor) Name() string {
-	return "brokerActor"
-}
-
-func (*brokerActor) Commands() []Command {
-	return []Command{
-		&Subscribe{},
-		&Unsubscribe{},
+		broker: newBroker(),
 	}
 }
 
@@ -28,23 +17,22 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		props := actor.FromProducer(newConnActor)
-		pid, err := ctx.SpawnNamed(props, "conn")
-		if err != nil {
-			log.Error(err.Error())
-		}
+		pid, _ := ctx.SpawnNamed(props, "conn")
 
 		state.connPID = pid
 	case *Subscribe:
-		state.brk.AddTopics(msg.Topics)
+		state.broker.AddTopics(msg.Topics)
 
 		ctx.Respond(&SubscribeSuccess{msg.Topics})
 	case *Unsubscribe:
-		state.brk.RemoveTopics(msg.Topics)
+		state.broker.RemoveTopics(msg.Topics)
 
 		ctx.Respond(&UnsubscribeSuccess{msg.Topics})
 	case Command:
 		state.connPID.Request(msg, ctx.Sender())
 	case Event:
-		ctx.Parent().Tell(msg)
+		if state.broker.Contains(msg.Event()) {
+			ctx.Parent().Tell(msg)
+		}
 	}
 }

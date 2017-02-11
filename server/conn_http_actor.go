@@ -7,7 +7,6 @@ import (
 	"errors"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/AsynkronIT/protoactor-go/plugin"
 	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/labstack/echo"
 	"github.com/uber-go/zap"
@@ -36,8 +35,7 @@ func (state *httpConnActor) Init(reg Registry) {
 func (state *httpConnActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
-		props := actor.FromInstance(newBrokerActor(state.brk)).
-			WithMiddleware(plugin.Use(RegistryPlugin()))
+		props := actor.FromInstance(newBrokerActor())
 		pid, err := ctx.SpawnNamed(props, "broker")
 		if err != nil {
 			log.Error(err.Error())
