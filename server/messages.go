@@ -1,9 +1,5 @@
 package server
 
-import (
-	"fmt"
-)
-
 type Command interface {
 	Command() string
 }
@@ -86,7 +82,7 @@ func (*LoginSuccess) Event() string {
 }
 
 type LoginFail struct {
-	*Error
+	*Err
 }
 
 func (*LoginFail) Event() string {
@@ -104,92 +100,9 @@ type LeaveRoomFail error
 type Success struct{}
 
 type Fail struct {
-	*Error
+	*Err
 }
 
 func (*Fail) Event() string {
 	return "event.fail"
-}
-
-const (
-	ErrCode = iota
-
-	ErrReadJSON
-	ErrWriteJSON
-
-	ErrToMessage
-	ErrFromMessage
-
-	ErrCreateRoom
-	ErrGetRoom
-	ErrJoinRoom
-	ErrRoomNotFound
-	ErrRoomFull
-
-	ErrCreateSession
-	ErrGetSession
-	ErrUseSession
-	ErrSessionNotFound
-
-	ErrLogin
-)
-
-type Error struct {
-	Code    int
-	Message string `json:"message"`
-}
-
-func newError(code int) *Error {
-	return &Error{
-		Code: code,
-	}
-}
-
-func newErrorWrap(code int, err error) *Error {
-	return &Error{
-		Code:    code,
-		Message: err.Error(),
-	}
-}
-
-func (e *Error) Error() string {
-	var s string
-	switch e.Code {
-	case ErrReadJSON:
-		s = "read json fail"
-	case ErrWriteJSON:
-		s = "write json fail"
-	case ErrToMessage:
-		s = "conv to message fail"
-	case ErrFromMessage:
-		s = "conv from message fail"
-	case ErrCreateRoom:
-		s = "create room fail"
-	case ErrGetRoom:
-		s = "get room fail"
-	case ErrJoinRoom:
-		s = "join room fail"
-	case ErrRoomNotFound:
-		s = "room not found"
-	case ErrRoomFull:
-		s = "room full"
-	case ErrCreateSession:
-		s = "create session fail"
-	case ErrGetSession:
-		s = "get session fail"
-	case ErrUseSession:
-		s = "use session fail"
-	case ErrSessionNotFound:
-		s = "session not found"
-	case ErrLogin:
-		s = "login fail"
-	default:
-		s = fmt.Sprintf("error %d", e.Code)
-	}
-
-	if len(e.Message) > 0 {
-		s += ": " + e.Message
-	}
-
-	return s
 }

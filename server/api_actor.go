@@ -40,14 +40,12 @@ func (state *apiActor) createRoom(c echo.Context) error {
 	future := state.roomManager.RequestFuture(createRoom, 1*time.Second)
 	res, err := future.Result()
 	if err != nil {
-		err := newErrorWrap(ErrCreateRoom, err)
-		log.Error(err.Error())
+		err := newErr(ErrAPICreateRoom).Error(err).LogErr()
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	if err, ok := res.(*Error); ok {
-		err := newErrorWrap(ErrCreateRoom, err)
-		log.Error(err.Error())
+	if err, ok := res.(*Err); ok {
+		err := newErr(ErrAPICreateRoom).Wrap(err).LogErr()
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -62,22 +60,19 @@ func (state *apiActor) createSession(c echo.Context) error {
 	}
 
 	if err := c.Bind(createSession); err != nil {
-		err := newErrorWrap(ErrCreateSession, err)
-		log.Error(err.Error())
+		err := newErr(ErrAPICreateSession).Error(err).LogErr()
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	future := state.sessionManager.RequestFuture(createSession, 1*time.Second)
 	res, err := future.Result()
 	if err != nil {
-		err := newErrorWrap(ErrCreateSession, err)
-		log.Error(err.Error())
+		err := newErr(ErrAPICreateSession).Error(err).LogErr()
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	if err, ok := res.(*Error); ok {
-		err := newErrorWrap(ErrCreateSession, err)
-		log.Error(err.Error())
+	if err, ok := res.(*Err); ok {
+		err := newErr(ErrAPICreateSession).Wrap(err).LogErr()
 		return c.JSON(http.StatusBadRequest, err)
 	}
 

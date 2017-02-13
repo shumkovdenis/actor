@@ -37,14 +37,14 @@ func (state *connActor) Receive(ctx actor.Context) {
 		future := state.sessionManagerPID.RequestFuture(getSession, 1*time.Second)
 		res, err := future.Result()
 		if err != nil {
-			log.Error("get session fail")
-			ctx.Respond(&LoginFail{newError(ErrLogin)})
+			err := newErr(ErrLogin).Error(err).LogErr()
+			ctx.Respond(&LoginFail{err})
 			return
 		}
 
-		if err, ok := res.(*Error); ok {
-			fail := &LoginFail{newErrorWrap(ErrGetSession, err)}
-			ctx.Respond(fail)
+		if err, ok := res.(*Err); ok {
+			err := newErr(ErrLogin).Wrap(err).LogErr()
+			ctx.Respond(&LoginFail{err})
 			return
 		}
 
@@ -57,14 +57,14 @@ func (state *connActor) Receive(ctx actor.Context) {
 		future = sessionPID.RequestFuture(useSession, 1*time.Second)
 		res, err = future.Result()
 		if err != nil {
-			fail := &LoginFail{newErrorWrap(ErrUseSession, err)}
-			ctx.Respond(fail)
+			err := newErr(ErrLogin).Error(err).LogErr()
+			ctx.Respond(&LoginFail{err})
 			return
 		}
 
-		if err, ok := res.(*Error); ok {
-			fail := &LoginFail{newErrorWrap(ErrUseSession, err)}
-			ctx.Respond(fail)
+		if err, ok := res.(*Err); ok {
+			err := newErr(ErrLogin).Wrap(err).LogErr()
+			ctx.Respond(&LoginFail{err})
 			return
 		}
 

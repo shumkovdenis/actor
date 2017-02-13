@@ -58,10 +58,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 				return
 			}
 
-			log.Error(err.Error())
-
-			fail := &Fail{newErrorWrap(ErrReadJSON, err)}
-			ctx.Self().Tell(fail)
+			err := newErr(ErrReadJSON).Error(err).LogErr()
+			ctx.Self().Tell(err)
 			continue
 		}
 
@@ -72,10 +70,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 
 		msg, err := state.conv.ToMessage(cmd)
 		if err != nil {
-			log.Error(err.Error())
-
-			fail := &Fail{newErrorWrap(ErrToMessage, err)}
-			ctx.Self().Tell(fail)
+			err := newErr(ErrToMessage).Error(err).LogErr()
+			ctx.Self().Tell(err)
 			continue
 		}
 

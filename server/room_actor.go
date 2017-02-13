@@ -31,7 +31,9 @@ func (state *roomActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *JoinRoom:
 		if state.sessions.Size() == 2 {
-			ctx.Respond(newError(ErrRoomFull))
+			err := newErr(ErrRoomFull).LogErr()
+			err = newErr(ErrJoinRoom).Wrap(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 

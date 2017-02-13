@@ -30,12 +30,14 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 		future := state.roomManager.RequestFuture(getRoom, 1*time.Second)
 		res, err := future.Result()
 		if err != nil {
-			ctx.Respond(newErrorWrap(ErrGetRoom, err))
+			err := newErr(ErrCreateSession).Error(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 
-		if err, ok := res.(*Error); ok {
-			ctx.Respond(newErrorWrap(ErrGetRoom, err))
+		if err, ok := res.(*Err); ok {
+			err := newErr(ErrCreateSession).Wrap(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 
@@ -51,12 +53,14 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 		future = roomPID.RequestFuture(joinRoom, 1*time.Second)
 		res, err = future.Result()
 		if err != nil {
-			ctx.Respond(newErrorWrap(ErrJoinRoom, err))
+			err := newErr(ErrCreateSession).Error(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 
-		if err, ok := res.(*Error); ok {
-			ctx.Respond(newErrorWrap(ErrJoinRoom, err))
+		if err, ok := res.(*Err); ok {
+			err := newErr(ErrCreateSession).Wrap(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 
@@ -73,7 +77,9 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 	case *GetSession:
 		pid, ok := state.sessions.Get(msg.SessionID)
 		if !ok {
-			ctx.Respond(newError(ErrSessionNotFound))
+			err := newErr(ErrSessionNotFound).LogErr()
+			err = newErr(ErrGetSession).Wrap(err).LogErr()
+			ctx.Respond(err)
 			return
 		}
 
