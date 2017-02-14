@@ -24,10 +24,14 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		state.broker.AddTopics(msg.Topics)
 
 		ctx.Respond(&SubscribeSuccess{msg.Topics})
+
+		state.connPID.Tell(msg)
 	case *Unsubscribe:
 		state.broker.RemoveTopics(msg.Topics)
 
 		ctx.Respond(&UnsubscribeSuccess{msg.Topics})
+
+		state.connPID.Tell(msg)
 	case Command:
 		state.connPID.Request(msg, ctx.Sender())
 	case Event:

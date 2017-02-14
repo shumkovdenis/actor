@@ -15,7 +15,10 @@ func init() {
 		&Subscribe{},
 		&Unsubscribe{},
 		&Login{},
-		&Ping{},
+		&AccountAuth{},
+		&AccountBalance{},
+		&AccountSession{},
+		&AccountWithdraw{},
 	}
 
 	for _, cmd := range cmds {

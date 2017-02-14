@@ -40,6 +40,9 @@ func Start() error {
 	props = actor.FromProducer(newSessionManagerActor)
 	actor.SpawnNamed(props, "sessions")
 
+	props = actor.FromProducer(newRatesActor)
+	actor.SpawnNamed(props, "rates")
+
 	props = actor.FromProducer(newServerActor)
 	actor.SpawnNamed(props, "server")
 

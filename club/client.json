@@ -1,31 +1,37 @@
 {
     "states": {
         "#start": {
+            "type": "command.login",
+            "data": {
+                "session_id": "638dd1df-8484-41a0-b97b-dd03ac0e60f3"
+            }
+        },
+        "#subscribe": {
             "type": "command.subscribe",
             "data": {
                 "topics": [
-                    "event.update.no",
-                    "event.update.available",
-                    "event.update.download.progress",
-                    "event.update.download.complete",
-                    "event.update.install.complete",
-                    "event.update.install.restart",
-                    "event.update.fail"
+                    "event.rates.change"
                 ]
             }
         },
-        "#login": {
-            "type": "command.login",
+        "#account_auth": {
+            "type": "command.account.auth",
             "data": {
-                "session_id": "76506b9f-8f28-4ef7-9e24-82b7b3f7406a"
+                "account": "1000700009",
+                "password": "1234"
             }
         },
-        "#ping": {
-            "type": "command.ping"
+        "#account_balance": {
+            "type": "command.account.balance"
+        },
+        "#account_withdraw": {
+            "type": "command.account.withdraw"
         }
     },
     "events": {
-        "event.subscribe.success": "#login",
-        "event.login.success": "#ping"
+        "event.login.success": "#subscribe",
+        "event.subscribe.success": "#account_auth",
+        "event.account.auth.success": "#account_balance",
+        "event.account.balance.success": "#account_withdraw"
     }
 }

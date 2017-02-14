@@ -38,6 +38,8 @@ const (
 	ErrAccountBalance
 	ErrAccountSession
 	ErrAccountWithdraw
+
+	ErrRates
 )
 
 var errID uint32
@@ -138,6 +140,8 @@ func (e *Err) Message() string {
 		msg = "account session fail"
 	case ErrAccountWithdraw:
 		msg = "account withdraw fail"
+	case ErrRates:
+		msg = "rates fail"
 	default:
 		msg = fmt.Sprintf("error %d", e.Code)
 	}
