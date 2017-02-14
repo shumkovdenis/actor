@@ -31,6 +31,13 @@ const (
 	ErrSessionNotFound
 
 	ErrLogin
+
+	ErrAccountNotAuth
+	ErrAccountAlreadyAuth
+	ErrAccountAuth
+	ErrAccountBalance
+	ErrAccountSession
+	ErrAccountWithdraw
 )
 
 var errID uint32
@@ -119,6 +126,18 @@ func (e *Err) Message() string {
 		msg = "session not found"
 	case ErrLogin:
 		msg = "login fail"
+	case ErrAccountNotAuth:
+		msg = "account not auth"
+	case ErrAccountAlreadyAuth:
+		msg = "account already auth"
+	case ErrAccountAuth:
+		msg = "account auth fail"
+	case ErrAccountBalance:
+		msg = "account balance fail"
+	case ErrAccountSession:
+		msg = "account session fail"
+	case ErrAccountWithdraw:
+		msg = "account withdraw fail"
 	default:
 		msg = fmt.Sprintf("error %d", e.Code)
 	}
