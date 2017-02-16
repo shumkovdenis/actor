@@ -2,13 +2,50 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
+
+	"go.uber.org/zap"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
 )
+
+const (
+	AccountNotAuth     = "account_not_auth"
+	AccountAlreadyAuth = "account_already_auth"
+)
+
+type AccountCommand interface {
+	AccountCommand()
+}
+
+type AccountAuth struct {
+	Account  string `mapstructure:"account"`
+	Password string `mapstructure:"password"`
+}
+
+func (*AccountAuth) Command() string {
+	return "command.account.auth"
+}
+
+func (*AccountAuth) AccountCommand() {}
+
+type AccountAuthSuccess struct {
+	Categories []Category `json:"categories"`
+}
+
+func (*AccountAuthSuccess) Event() string {
+	return "event.account.auth.success"
+}
+
+type AccountAuthFail struct {
+	// *Err
+}
+
+func (*AccountAuthFail) Event() string {
+	return "event.account.auth.fail"
+}
 
 type accountActor struct {
 	account  string
@@ -22,33 +59,42 @@ func newAccountActor() actor.Actor {
 func (state *accountActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *AccountAuth:
-		proc := accountAuth(msg.Account, msg.Password)
-		if Process(proc, ctx.Respond) {
-			state.account = msg.Account
-			state.password = msg.Password
-			ctx.SetBehavior(state.authorized)
+		res := accountAuth(msg.Account, msg.Password)
+		if fail, ok := res.(Fail); ok {
+			ctx.Respond(fail)
+			return
 		}
-	case *AccountBalance:
-		err := newErr(ErrAccountNotAuth).LogErr()
-		err = newErr(ErrAccountBalance).Wrap(err).LogErr()
-		ctx.Respond(&AccountBalanceFail{err})
-	case *AccountSession:
-		err := newErr(ErrAccountNotAuth).LogErr()
-		err = newErr(ErrAccountSession).Wrap(err).LogErr()
-		ctx.Respond(&AccountSessionFail{err})
-	case *AccountWithdraw:
-		err := newErr(ErrAccountNotAuth).LogErr()
-		err = newErr(ErrAccountWithdraw).Wrap(err).LogErr()
-		ctx.Respond(&AccountWithdrawFail{err})
+
+		ctx.Respond(res)
+
+		state.account = msg.Account
+		state.password = msg.Password
+
+		ctx.SetBehavior(state.authorized)
+	case AccountCommand:
+		ctx.Respond(newFail(AccountNotAuth))
+		// case *AccountBalance:
+		// err := newErr(ErrAccountNotAuth).LogErr()
+		// err = newErr(ErrAccountBalance).Wrap(err).LogErr()
+		// ctx.Respond(&AccountBalanceFail{err})
+		// case *AccountSession:
+		// err := newErr(ErrAccountNotAuth).LogErr()
+		// err = newErr(ErrAccountSession).Wrap(err).LogErr()
+		// ctx.Respond(&AccountSessionFail{err})
+		// case *AccountWithdraw:
+		// err := newErr(ErrAccountNotAuth).LogErr()
+		// err = newErr(ErrAccountWithdraw).Wrap(err).LogErr()
+		// ctx.Respond(&AccountWithdrawFail{err})
 	}
 }
 
 func (state *accountActor) authorized(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *AccountAuth:
-		err := newErr(ErrAccountAlreadyAuth).LogErr()
-		err = newErr(ErrAccountAuth).Wrap(err).LogErr()
-		ctx.Respond(&AccountAuthFail{err})
+		// err := newErr(ErrAccountAlreadyAuth).LogErr()
+		// err = newErr(ErrAccountAuth).Wrap(err).LogErr()
+		// ctx.Respond(&AccountAuthFail{err})
+		ctx.Respond(newFail(AccountAlreadyAuth))
 	case *AccountBalance:
 		proc := accountBalance(state.account, state.password)
 		Process(proc, ctx.Respond)
@@ -63,65 +109,65 @@ func (state *accountActor) authorized(ctx actor.Context) {
 	}
 }
 
-func accountAuth(account, password string) Proc {
-	return func(tell Tell) bool {
-		conf := config.AccountAPI()
+func accountAuth(account, password string) interface{} {
+	conf := config.AccountAPI()
 
-		resp, err := resty.R().
-			SetFormData(map[string]string{
-				"auth_submit":   conf.Type + "_CLIENT_AUTH",
-				"auth_username": account,
-				"auth_password": password,
-			}).
-			Post(conf.URL)
-		if err != nil {
-			err := newErr(ErrAccountAuth).Error(err).LogErr()
-			tell(&AccountAuthFail{err})
-			return false
-		}
-
-		res := &struct {
-			Result string `json:"result"`
-			Code   int    `json:"code"`
-			Groups []struct {
-				Title string `json:"title"`
-				Games []struct {
-					ID    string `json:"id"`
-					Title string `json:"title"`
-				}
-			} `json:"groups"`
-		}{}
-		if err = json.Unmarshal(resp.Body(), res); err != nil {
-			err := newErr(ErrAccountAuth).Error(err).LogErr()
-			tell(&AccountAuthFail{err})
-			return false
-		}
-
-		if res.Result == "Error" {
-			e := fmt.Errorf("error: %d", res.Code)
-			err := newErr(ErrAccountAuth).Error(e).LogErr()
-			tell(&AccountAuthFail{err})
-			return false
-		}
-
-		categories := make([]Category, len(res.Groups))
-		for i, group := range res.Groups {
-			games := make([]Game, len(group.Games))
-			for j, game := range group.Games {
-				games[j] = Game{
-					ID:    game.ID,
-					Title: game.Title,
-				}
-			}
-			categories[i] = Category{
-				Title: group.Title,
-				Games: games,
-			}
-		}
-
-		tell(&AccountAuthSuccess{categories})
-		return true
+	resp, err := resty.R().
+		SetFormData(map[string]string{
+			"auth_submit":   conf.Type + "_CLIENT_AUTH",
+			"auth_username": account,
+			"auth_password": password,
+		}).
+		Post(conf.URL)
+	if err != nil {
+		log.Error("auth account fail",
+			zap.Error(err),
+		)
+		// err := newErr(ErrAccountAuth).Error(err).LogErr()
+		// tell(&AccountAuthFail{err})
+		return false
 	}
+
+	res := &struct {
+		Result string `json:"result"`
+		Code   int    `json:"code"`
+		Groups []struct {
+			Title string `json:"title"`
+			Games []struct {
+				ID    string `json:"id"`
+				Title string `json:"title"`
+			}
+		} `json:"groups"`
+	}{}
+	if err = json.Unmarshal(resp.Body(), res); err != nil {
+		// err := newErr(ErrAccountAuth).Error(err).LogErr()
+		// tell(&AccountAuthFail{err})
+		return false
+	}
+
+	if res.Result == "Error" {
+		// e := fmt.Errorf("error: %d", res.Code)
+		// err := newErr(ErrAccountAuth).Error(e).LogErr()
+		// tell(&AccountAuthFail{err})
+		return false
+	}
+
+	categories := make([]Category, len(res.Groups))
+	for i, group := range res.Groups {
+		games := make([]Game, len(group.Games))
+		for j, game := range group.Games {
+			games[j] = Game{
+				ID:    game.ID,
+				Title: game.Title,
+			}
+		}
+		categories[i] = Category{
+			Title: group.Title,
+			Games: games,
+		}
+	}
+
+	return &AccountAuthSuccess{categories}
 }
 
 func accountBalance(account, password string) Proc {
@@ -136,8 +182,8 @@ func accountBalance(account, password string) Proc {
 			}).
 			Post(conf.URL)
 		if err != nil {
-			err := newErr(ErrAccountBalance).Error(err).LogErr()
-			tell(&AccountBalanceFail{err})
+			// err := newErr(ErrAccountBalance).Error(err).LogErr()
+			// tell(&AccountBalanceFail{err})
 			return false
 		}
 
@@ -147,15 +193,15 @@ func accountBalance(account, password string) Proc {
 			Balance float64 `json:"balance"`
 		}{}
 		if err = json.Unmarshal(resp.Body(), res); err != nil {
-			err := newErr(ErrAccountBalance).Error(err).LogErr()
-			tell(&AccountBalanceFail{err})
+			// err := newErr(ErrAccountBalance).Error(err).LogErr()
+			// tell(&AccountBalanceFail{err})
 			return false
 		}
 
 		if res.Result == "Error" {
-			e := fmt.Errorf("error: %d", res.Code)
-			err := newErr(ErrAccountBalance).Error(e).LogErr()
-			tell(&AccountBalanceFail{err})
+			// e := fmt.Errorf("error: %d", res.Code)
+			// err := newErr(ErrAccountBalance).Error(e).LogErr()
+			// tell(&AccountBalanceFail{err})
 			return false
 		}
 
@@ -177,8 +223,8 @@ func accountSession(account, password string, gameID int) Proc {
 			}).
 			Post(conf.URL)
 		if err != nil {
-			err := newErr(ErrAccountSession).Error(err).LogErr()
-			tell(&AccountSessionFail{err})
+			// err := newErr(ErrAccountSession).Error(err).LogErr()
+			// tell(&AccountSessionFail{err})
 			return false
 		}
 
@@ -190,15 +236,15 @@ func accountSession(account, password string, gameID int) Proc {
 			Host        string `json:"host"`
 		}{}
 		if err = json.Unmarshal(resp.Body(), res); err != nil {
-			err := newErr(ErrAccountSession).Error(err).LogErr()
-			tell(&AccountSessionFail{err})
+			// err := newErr(ErrAccountSession).Error(err).LogErr()
+			// tell(&AccountSessionFail{err})
 			return false
 		}
 
 		if res.Result == "Error" {
-			e := fmt.Errorf("error: %d", res.Code)
-			err := newErr(ErrAccountSession).Error(e).LogErr()
-			tell(&AccountSessionFail{err})
+			// e := fmt.Errorf("error: %d", res.Code)
+			// err := newErr(ErrAccountSession).Error(e).LogErr()
+			// tell(&AccountSessionFail{err})
 			return false
 		}
 
@@ -223,8 +269,8 @@ func accountWithdraw(account, password string) Proc {
 			}).
 			Post(conf.URL)
 		if err != nil {
-			err := newErr(ErrAccountWithdraw).Error(err).LogErr()
-			tell(&AccountWithdrawFail{err})
+			// err := newErr(ErrAccountWithdraw).Error(err).LogErr()
+			// tell(&AccountWithdrawFail{err})
 			return false
 		}
 
@@ -233,15 +279,15 @@ func accountWithdraw(account, password string) Proc {
 			Code   int    `json:"code"`
 		}{}
 		if err = json.Unmarshal(resp.Body(), res); err != nil {
-			err := newErr(ErrAccountWithdraw).Error(err).LogErr()
-			tell(&AccountWithdrawFail{err})
+			// err := newErr(ErrAccountWithdraw).Error(err).LogErr()
+			// tell(&AccountWithdrawFail{err})
 			return false
 		}
 
 		if res.Result == "Error" {
-			e := fmt.Errorf("error: %d", res.Code)
-			err := newErr(ErrAccountWithdraw).Error(e).LogErr()
-			tell(&AccountWithdrawFail{err})
+			// e := fmt.Errorf("error: %d", res.Code)
+			// err := newErr(ErrAccountWithdraw).Error(e).LogErr()
+			// tell(&AccountWithdrawFail{err})
 			return false
 		}
 
@@ -250,37 +296,14 @@ func accountWithdraw(account, password string) Proc {
 	}
 }
 
-type AccountAuth struct {
-	Account  string `mapstructure:"account"`
-	Password string `mapstructure:"password"`
-}
-
-func (*AccountAuth) Command() string {
-	return "command.account.auth"
-}
-
-type AccountAuthSuccess struct {
-	Categories []Category `json:"categories"`
-}
-
-func (*AccountAuthSuccess) Event() string {
-	return "event.account.auth.success"
-}
-
-type AccountAuthFail struct {
-	*Err
-}
-
-func (*AccountAuthFail) Event() string {
-	return "event.account.auth.fail"
-}
-
 type AccountBalance struct {
 }
 
 func (*AccountBalance) Command() string {
 	return "command.account.balance"
 }
+
+func (*AccountBalance) AccountCommand() {}
 
 type AccountBalanceSuccess struct {
 	Balance float64 `json:"balance"`
@@ -291,7 +314,7 @@ func (*AccountBalanceSuccess) Event() string {
 }
 
 type AccountBalanceFail struct {
-	*Err
+	// *Err
 }
 
 func (*AccountBalanceFail) Event() string {
@@ -306,6 +329,8 @@ func (*AccountSession) Command() string {
 	return "command.account.session"
 }
 
+func (*AccountSession) AccountCommand() {}
+
 type AccountSessionSuccess struct {
 	SessionID string `json:"session_id"`
 	GameID    string `json:"game_id"`
@@ -317,7 +342,7 @@ func (*AccountSessionSuccess) Event() string {
 }
 
 type AccountSessionFail struct {
-	*Err
+	// *Err
 }
 
 func (*AccountSessionFail) Event() string {
@@ -331,6 +356,8 @@ func (*AccountWithdraw) Command() string {
 	return "command.account.withdraw"
 }
 
+func (*AccountWithdraw) AccountCommand() {}
+
 type AccountWithdrawSuccess struct {
 }
 
@@ -339,7 +366,7 @@ func (*AccountWithdrawSuccess) Event() string {
 }
 
 type AccountWithdrawFail struct {
-	*Err
+	// *Err
 }
 
 func (*AccountWithdrawFail) Event() string {

@@ -1,17 +1,13 @@
 package logger
 
-import "github.com/uber-go/zap"
+import "go.uber.org/zap"
 
-var l zap.Logger
+var l *zap.Logger
 
 func init() {
-	l = zap.New(
-		zap.NewTextEncoder(),
-		// zap.AddCaller(),
-		zap.DebugLevel,
-	)
+	l, _ = zap.NewProduction()
 }
 
-func Get() zap.Logger {
+func Get() *zap.Logger {
 	return l
 }

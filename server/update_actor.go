@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/config"
-	"github.com/uber-go/zap"
 )
 
 type updateActor struct {

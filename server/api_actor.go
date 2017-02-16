@@ -4,15 +4,23 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	ParseJSONFail = "parse_json_fail"
+
+	Timeout = 1 * time.Second
+)
+
 type apiActor struct {
-	grp            *echo.Group
-	roomManager    *actor.PID
-	sessionManager *actor.PID
+	grp               *echo.Group
+	roomManagerPID    *actor.PID
+	sessionManagerPID *actor.PID
 }
 
 func newAPIActor(group *echo.Group) actor.Actor {
@@ -24,8 +32,8 @@ func newAPIActor(group *echo.Group) actor.Actor {
 func (state *apiActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		state.roomManager = actor.NewLocalPID("rooms")
-		state.sessionManager = actor.NewLocalPID("sessions")
+		state.roomManagerPID = actor.NewLocalPID("rooms")
+		state.sessionManagerPID = actor.NewLocalPID("sessions")
 
 		state.grp.POST("/rooms", state.createRoom)
 		state.grp.POST("/sessions", state.createSession)
@@ -37,21 +45,20 @@ func (state *apiActor) createRoom(c echo.Context) error {
 		RoomID: uuid.NewV4().String(),
 	}
 
-	future := state.roomManager.RequestFuture(createRoom, 1*time.Second)
+	future := state.roomManagerPID.RequestFuture(createRoom, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		err := newErr(ErrAPICreateRoom).Error(err).LogErr()
-		return c.JSON(http.StatusInternalServerError, err)
+		log.Error("api create room fail: create room fail",
+			zap.Error(err),
+		)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if err, ok := res.(*Err); ok {
-		err := newErr(ErrAPICreateRoom).Wrap(err).LogErr()
-		return c.JSON(http.StatusBadRequest, err)
+	if fail, ok := res.(Fail); ok {
+		return c.JSON(http.StatusBadRequest, fail)
 	}
 
-	success := res.(*CreateRoomSuccess)
-
-	return c.JSON(http.StatusOK, success.Room)
+	return c.JSON(http.StatusOK, res.(*CreateRoomSuccess).Room)
 }
 
 func (state *apiActor) createSession(c echo.Context) error {
@@ -60,23 +67,24 @@ func (state *apiActor) createSession(c echo.Context) error {
 	}
 
 	if err := c.Bind(createSession); err != nil {
-		err := newErr(ErrAPICreateSession).Error(err).LogErr()
-		return c.JSON(http.StatusBadRequest, err)
+		log.Error("api create session fail: parse json fail",
+			zap.Error(err),
+		)
+		return c.JSON(http.StatusBadRequest, newFail(ParseJSONFail))
 	}
 
-	future := state.sessionManager.RequestFuture(createSession, 1*time.Second)
+	future := state.sessionManagerPID.RequestFuture(createSession, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		err := newErr(ErrAPICreateSession).Error(err).LogErr()
-		return c.JSON(http.StatusInternalServerError, err)
+		log.Error("api create session fail: create session fail",
+			zap.Error(err),
+		)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if err, ok := res.(*Err); ok {
-		err := newErr(ErrAPICreateSession).Wrap(err).LogErr()
-		return c.JSON(http.StatusBadRequest, err)
+	if fail, ok := res.(Fail); ok {
+		return c.JSON(http.StatusBadRequest, fail)
 	}
 
-	success := res.(*CreateSessionSuccess)
-
-	return c.JSON(http.StatusOK, success.Session)
+	return c.JSON(http.StatusOK, res.(*CreateSessionSuccess).Session)
 }

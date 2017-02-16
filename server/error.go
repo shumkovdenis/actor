@@ -1,12 +1,6 @@
 package server
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"github.com/uber-go/zap"
-)
-
+/*
 const (
 	_ uint16 = iota
 
@@ -163,3 +157,4 @@ func (e *Err) MarshalJSON() ([]byte, error) {
 		Message: err.Message(),
 	})
 }
+*/

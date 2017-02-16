@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 type wsConnActor struct {
@@ -58,8 +58,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 				return
 			}
 
-			err := newErr(ErrReadJSON).Error(err).LogErr()
-			ctx.Self().Tell(err)
+			// err := newErr(ErrReadJSON).Error(err).LogErr()
+			// ctx.Self().Tell(err)
 			continue
 		}
 
@@ -70,8 +70,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 
 		msg, err := state.conv.ToMessage(cmd)
 		if err != nil {
-			err := newErr(ErrToMessage).Error(err).LogErr()
-			ctx.Self().Tell(err)
+			// err := newErr(ErrToMessage).Error(err).LogErr()
+			// ctx.Self().Tell(err)
 			continue
 		}
 

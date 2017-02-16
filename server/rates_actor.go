@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -65,26 +64,26 @@ func rates(tell Tell) bool {
 
 	resp, err := resty.R().Get(conf.URL)
 	if err != nil {
-		err := newErr(ErrRates).Error(err).LogErr()
-		tell(&RatesFail{err})
+		// err := newErr(ErrRates).Error(err).LogErr()
+		// tell(&RatesFail{err})
 		return false
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		e := fmt.Errorf("status code: %d", resp.StatusCode())
-		err := newErr(ErrRates).Error(e).LogErr()
-		tell(&RatesFail{err})
+		// e := fmt.Errorf("status code: %d", resp.StatusCode())
+		// err := newErr(ErrRates).Error(e).LogErr()
+		// tell(&RatesFail{err})
 		return false
 	}
 
 	res := make([]*Rate, 0)
 	if err = json.Unmarshal(resp.Body(), &res); err != nil {
-		err := newErr(ErrRates).Error(err).LogErr()
-		tell(&RatesFail{err})
+		// 	err := newErr(ErrRates).Error(err).LogErr()
+		// 	tell(&RatesFail{err})
 		return false
 	}
 
-	tell(&RatesChange{res})
+	// tell(&RatesChange{res})
 	return true
 }
 
@@ -105,7 +104,7 @@ func (*RatesChange) Event() string {
 }
 
 type RatesFail struct {
-	*Err
+	// *Err
 }
 
 func (*RatesFail) Event() string {

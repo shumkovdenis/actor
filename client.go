@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/gorilla/websocket"
 
 	"io/ioutil"
 
 	"fmt"
-
-	"github.com/uber-go/zap"
 )
 
 type message struct {

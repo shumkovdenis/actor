@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"errors"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/labstack/echo"
-	"github.com/uber-go/zap"
 )
 
 type httpConnActor struct {

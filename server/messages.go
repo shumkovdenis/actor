@@ -82,7 +82,7 @@ func (*LoginSuccess) Event() string {
 }
 
 type LoginFail struct {
-	*Err
+	// *Err
 }
 
 func (*LoginFail) Event() string {
@@ -99,10 +99,26 @@ type LeaveRoomFail error
 
 type Success struct{}
 
-type Fail struct {
-	*Err
+// type Fail struct {
+// 	*Err
+// }
+
+// func (*Fail) Event() string {
+// 	return "event.fail"
+// }
+
+type Fail interface {
+	Code() string
 }
 
-func (*Fail) Event() string {
-	return "event.fail"
+type fail struct {
+	CodeFail string `json:"code"`
+}
+
+func newFail(code string) Fail {
+	return &fail{code}
+}
+
+func (f *fail) Code() string {
+	return f.CodeFail
 }
