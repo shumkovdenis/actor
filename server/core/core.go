@@ -9,5 +9,5 @@ type Event interface {
 }
 
 type Fail interface {
-	Code() string
+	Fail() string
 }

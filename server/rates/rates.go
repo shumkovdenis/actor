@@ -41,7 +41,7 @@ func (*RatesFailed) Event() string {
 	return "event.rates.failed"
 }
 
-func (*RatesFailed) Code() string {
+func (*RatesFailed) Fail() string {
 	return "rates_failed"
 }
 

@@ -36,10 +36,10 @@ type AlreadyAuthorized struct{}
 func (*AlreadyAuthorized) AccountMessage() {}
 
 func (m *AlreadyAuthorized) Event() string {
-	return "event.account.authorize." + m.Code()
+	return "event.account.authorize.failed"
 }
 
-func (*AlreadyAuthorized) Code() string {
+func (*AlreadyAuthorized) Fail() string {
 	return "already_authorized"
 }
 
@@ -48,10 +48,10 @@ type NotAuthorized struct{}
 func (*NotAuthorized) AccountMessage() {}
 
 func (m *NotAuthorized) Event() string {
-	return "event.account.authorize." + m.Code()
+	return "event.account.authorize.failed"
 }
 
-func (*NotAuthorized) Code() string {
+func (*NotAuthorized) Fail() string {
 	return "not_authorized"
 }
 
@@ -60,10 +60,10 @@ type AuthorizationFailed struct{}
 func (*AuthorizationFailed) AccountMessage() {}
 
 func (m *AuthorizationFailed) Event() string {
-	return "event.account.authorize." + m.Code()
+	return "event.account.authorize.failed"
 }
 
-func (*AuthorizationFailed) Code() string {
+func (*AuthorizationFailed) Fail() string {
 	return "authorization_failed"
 }
 
@@ -93,7 +93,7 @@ func (*GetBalanceFailed) Event() string {
 	return "event.account.balance.failed"
 }
 
-func (*GetBalanceFailed) Code() string {
+func (*GetBalanceFailed) Fail() string {
 	return "get_balance_failed"
 }
 
@@ -127,7 +127,7 @@ func (*GetGameSessionFailed) Event() string {
 	return "event.account.session.failed"
 }
 
-func (*GetGameSessionFailed) Code() string {
+func (*GetGameSessionFailed) Fail() string {
 	return "get_game_session_failed"
 }
 
@@ -155,7 +155,7 @@ func (*WithdrawFailed) Event() string {
 	return "event.account.withdraw.failed"
 }
 
-func (*WithdrawFailed) Code() string {
+func (*WithdrawFailed) Fail() string {
 	return "withdraw_failed"
 }
 

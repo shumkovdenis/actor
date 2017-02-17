@@ -34,7 +34,7 @@ func (*SubscribeFailed) Event() string {
 	return "event.subscribe.failed"
 }
 
-func (*SubscribeFailed) Code() string {
+func (*SubscribeFailed) Fail() string {
 	return "subscribe_failed"
 }
 
@@ -68,6 +68,6 @@ func (*UnsubscribeFailed) Event() string {
 	return "event.unsubscribe.failed"
 }
 
-func (*UnsubscribeFailed) Code() string {
+func (*UnsubscribeFailed) Fail() string {
 	return "unsubscribe_failed"
 }

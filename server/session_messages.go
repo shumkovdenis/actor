@@ -23,7 +23,9 @@ type CreateSessionFailed struct{}
 
 func (*CreateSessionFailed) SessionMessage() {}
 
-func (*CreateSessionFailed) Code() string { return "create_session_failed" }
+func (*CreateSessionFailed) Fail() string {
+	return "create_session_failed"
+}
 
 type GetSession struct {
 	SessionID string
@@ -35,7 +37,9 @@ type SessionNotFound struct{}
 
 func (*SessionNotFound) SessionMessage() {}
 
-func (*SessionNotFound) Code() string { return "session_not_found" }
+func (*SessionNotFound) Fail() string {
+	return "session_not_found"
+}
 
 type UseSession struct {
 	ConnPID *actor.PID
@@ -43,14 +47,14 @@ type UseSession struct {
 
 func (*UseSession) SessionMessage() {}
 
-type UseSessionSuccess struct {
-}
+type UseSessionSuccess struct{}
 
 func (*UseSessionSuccess) SessionMessage() {}
 
-type SessionAlreadyUse struct {
-}
+type SessionAlreadyUse struct{}
 
 func (*SessionAlreadyUse) SessionMessage() {}
 
-func (*SessionAlreadyUse) Code() string { return "session_already_use" }
+func (*SessionAlreadyUse) Fail() string {
+	return "session_already_use"
+}

@@ -28,7 +28,9 @@ type RoomNotFound struct{}
 
 func (*RoomNotFound) RoomMessage() {}
 
-func (*RoomNotFound) Code() string { return "room_not_found" }
+func (*RoomNotFound) Fail() string {
+	return "room_not_found"
+}
 
 type JoinRoom struct {
 	SessionPID *actor.PID
@@ -44,7 +46,9 @@ type RoomFull struct{}
 
 func (*RoomFull) RoomMessage() {}
 
-func (*RoomFull) Code() string { return "room_full" }
+func (*RoomFull) Fail() string {
+	return "room_full"
+}
 
 type LeaveRoom struct {
 	SessionPID *actor.PID

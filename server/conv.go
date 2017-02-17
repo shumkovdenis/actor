@@ -81,7 +81,7 @@ func (c *conv) FromMessage(msg interface{}) (*event, error) {
 		data = &struct {
 			Code string `json:"code"`
 		}{
-			Code: fail.Code(),
+			Code: fail.Fail(),
 		}
 	} else {
 		data = msg

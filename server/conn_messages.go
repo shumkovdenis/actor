@@ -8,9 +8,13 @@ type ConnReadFailed struct{}
 
 func (*ConnReadFailed) ConnMessage() {}
 
-func (*ConnReadFailed) Event() string { return "event.conn.failed" }
+func (*ConnReadFailed) Event() string {
+	return "event.conn.failed"
+}
 
-func (*ConnReadFailed) Code() string { return "conn_read_failed" }
+func (*ConnReadFailed) Fail() string {
+	return "conn_read_failed"
+}
 
 type Login struct {
 	SessionID string `mapstructure:"session_id"`
