@@ -1,9 +1,6 @@
 package account
 
-import (
-	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/shumkovdenis/club/server/core"
-)
+import "github.com/AsynkronIT/protoactor-go/actor"
 
 type accountActor struct {
 	username string
@@ -19,7 +16,7 @@ func (state *accountActor) Receive(ctx actor.Context) {
 	case *Authorize:
 		res := authorize(msg.Username, msg.Password)
 		ctx.Respond(res)
-		if !core.IsFail(res) {
+		if _, ok := res.(*Authorized); ok {
 			state.username = msg.Username
 			state.password = msg.Password
 			ctx.SetBehavior(state.authorized)
@@ -42,7 +39,7 @@ func (state *accountActor) authorized(ctx actor.Context) {
 	case *Withdraw:
 		res := withdraw(state.username, state.password)
 		ctx.Respond(res)
-		if !core.IsFail(res) {
+		if _, ok := res.(*WithdrawSuccess); ok {
 			ctx.SetBehavior(state.Receive)
 		}
 	}

@@ -9,21 +9,13 @@ import (
 )
 
 type Server interface {
-	Registry() Registry
 }
 
 type serverActor struct {
-	registry Registry
 }
 
 func newServerActor() actor.Actor {
-	return &serverActor{
-		registry: newRegistry(),
-	}
-}
-
-func (state *serverActor) Registry() Registry {
-	return state.registry
+	return &serverActor{}
 }
 
 func (state *serverActor) Receive(ctx actor.Context) {

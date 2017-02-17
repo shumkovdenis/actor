@@ -1,6 +1,9 @@
 package server
 
-import "github.com/AsynkronIT/protoactor-go/actor"
+import (
+	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/shumkovdenis/club/server/core"
+)
 
 type brokerActor struct {
 	broker  Broker
@@ -32,9 +35,9 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		ctx.Respond(&UnsubscribeSuccess{msg.Topics})
 
 		state.connPID.Tell(msg)
-	case Command:
+	case core.Command:
 		state.connPID.Request(msg, ctx.Sender())
-	case Event:
+	case core.Event:
 		if state.broker.Contains(msg.Event()) {
 			ctx.Parent().Tell(msg)
 		}

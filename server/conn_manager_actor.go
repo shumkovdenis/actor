@@ -5,17 +5,18 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 )
 
 type connManagerActor struct {
-	grp *echo.Group
-	upg *websocket.Upgrader
+	group    *echo.Group
+	upgrader *websocket.Upgrader
 }
 
 func newConnManagerActor(group *echo.Group) actor.Actor {
 	return &connManagerActor{
-		grp: group,
-		upg: &websocket.Upgrader{},
+		group:    group,
+		upgrader: &websocket.Upgrader{},
 	}
 }
 
@@ -23,9 +24,7 @@ func (state *connManagerActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		// state.grp.GET("/http", state.http(ctx))
-		state.grp.GET("/ws", state.ws(ctx))
-
-		log.Info("Conn manager started")
+		state.group.GET("/ws", state.ws(ctx))
 	}
 }
 
@@ -54,22 +53,18 @@ func (state *connManagerActor) Receive(ctx actor.Context) {
 
 func (state *connManagerActor) ws(ctx actor.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		conn, err := state.upg.Upgrade(c.Response(), c.Request(), nil)
+		conn, err := state.upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
-			log.Error(err.Error())
-
+			log.Error("create websocket connection failed",
+				zap.Error(err),
+			)
 			return err
 		}
 
 		id := uuid.NewV4().String()
 
 		props := actor.FromInstance(newWSConnActor(conn))
-		_, err = ctx.SpawnNamed(props, id)
-		if err != nil {
-			log.Error(err.Error())
-
-			return err
-		}
+		ctx.SpawnNamed(props, id)
 
 		return nil
 	}

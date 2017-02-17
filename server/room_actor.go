@@ -5,10 +5,6 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 )
 
-const (
-	RoomFull = "room_full"
-)
-
 type roomActor struct {
 	sessions *hashset.Set
 }
@@ -23,19 +19,16 @@ func (state *roomActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *JoinRoom:
 		if state.sessions.Size() == 2 {
-			ctx.Respond(newFail(RoomFull))
+			ctx.Respond(&RoomFull{})
 			return
 		}
 
 		state.sessions.Add(msg.SessionPID)
 
-		ctx.Respond(&JoinRoomSuccess{})
+		ctx.Respond(&JoinedRoom{})
+	case *LeaveRoom:
+		state.sessions.Remove(msg.SessionPID)
+
+		ctx.Respond(&LeftRoom{})
 	}
-}
-
-type JoinRoom struct {
-	SessionPID *actor.PID
-}
-
-type JoinRoomSuccess struct {
 }

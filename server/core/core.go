@@ -1,10 +1,13 @@
 package core
 
-type Fail interface {
-	Code() string
+type Command interface {
+	Command() string
 }
 
-func IsFail(msg interface{}) bool {
-	_, ok := msg.(Fail)
-	return ok
+type Event interface {
+	Event() string
+}
+
+type Fail interface {
+	Code() string
 }

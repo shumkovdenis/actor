@@ -5,26 +5,6 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 )
 
-const (
-	RoomNotFound = "room_not_found"
-)
-
-type CreateRoom struct {
-	RoomID string
-}
-
-type CreateRoomSuccess struct {
-	Room *Room
-}
-
-type GetRoom struct {
-	RoomID string
-}
-
-type GetRoomSuccess struct {
-	RoomPID *actor.PID
-}
-
 type roomManagerActor struct {
 	rooms *treemap.Map
 }
@@ -43,18 +23,14 @@ func (state *roomManagerActor) Receive(ctx actor.Context) {
 
 		state.rooms.Put(msg.RoomID, pid)
 
-		ctx.Respond(&CreateRoomSuccess{
-			Room: &Room{ID: msg.RoomID},
-		})
+		ctx.Respond(&Room{msg.RoomID})
 	case *GetRoom:
 		pid, ok := state.rooms.Get(msg.RoomID)
 		if !ok {
-			ctx.Respond(newFail(RoomNotFound))
+			ctx.Respond(&RoomNotFound{})
 			return
 		}
 
-		ctx.Respond(&GetRoomSuccess{
-			RoomPID: pid.(*actor.PID),
-		})
+		ctx.Respond(pid)
 	}
 }

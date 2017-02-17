@@ -9,23 +9,22 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
+	"github.com/shumkovdenis/club/server/core"
 )
 
 const (
-	ParseJSONFail = "parse_json_fail"
-
 	Timeout = 1 * time.Second
 )
 
 type apiActor struct {
-	grp               *echo.Group
+	group             *echo.Group
 	roomManagerPID    *actor.PID
 	sessionManagerPID *actor.PID
 }
 
 func newAPIActor(group *echo.Group) actor.Actor {
 	return &apiActor{
-		grp: group,
+		group: group,
 	}
 }
 
@@ -35,8 +34,8 @@ func (state *apiActor) Receive(ctx actor.Context) {
 		state.roomManagerPID = actor.NewLocalPID("rooms")
 		state.sessionManagerPID = actor.NewLocalPID("sessions")
 
-		state.grp.POST("/rooms", state.createRoom)
-		state.grp.POST("/sessions", state.createSession)
+		state.group.POST("/rooms", state.createRoom)
+		state.group.POST("/sessions", state.createSession)
 	}
 }
 
@@ -48,43 +47,68 @@ func (state *apiActor) createRoom(c echo.Context) error {
 	future := state.roomManagerPID.RequestFuture(createRoom, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		log.Error("api create room fail: create room fail",
+		log.Error("api create room failed: create room failed",
 			zap.Error(err),
 		)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if fail, ok := res.(Fail); ok {
-		return c.JSON(http.StatusBadRequest, fail)
+	room, ok := res.(*Room)
+	if !ok {
+		if fail, ok := res.(core.Fail); ok {
+			return c.JSON(http.StatusBadRequest, failResp(fail))
+		}
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, res.(*CreateRoomSuccess).Room)
+	resp := &struct {
+		ID string `json:"id"`
+	}{
+		ID: room.ID,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 func (state *apiActor) createSession(c echo.Context) error {
-	createSession := &CreateSession{
-		SessionID: uuid.NewV4().String(),
-	}
+	req := &struct {
+		RoomID string `json:"room_id"`
+	}{}
 
-	if err := c.Bind(createSession); err != nil {
-		log.Error("api create session fail: parse json fail",
+	if err := c.Bind(req); err != nil {
+		log.Error("api create session failed: parse json failed",
 			zap.Error(err),
 		)
-		return c.JSON(http.StatusBadRequest, newFail(ParseJSONFail))
+		return c.JSON(http.StatusBadRequest, failResp(&ParseJSONFailed{}))
+	}
+
+	createSession := &CreateSession{
+		SessionID: uuid.NewV4().String(),
+		RoomID:    req.RoomID,
 	}
 
 	future := state.sessionManagerPID.RequestFuture(createSession, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		log.Error("api create session fail: create session fail",
+		log.Error("api create session failed: create session failed",
 			zap.Error(err),
 		)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if fail, ok := res.(Fail); ok {
-		return c.JSON(http.StatusBadRequest, fail)
+	session, ok := res.(*Session)
+	if !ok {
+		if fail, ok := res.(core.Fail); ok {
+			return c.JSON(http.StatusBadRequest, failResp(fail))
+		}
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, res.(*CreateSessionSuccess).Session)
+	resp := &struct {
+		ID string `json:"id"`
+	}{
+		ID: session.ID,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }

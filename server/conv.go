@@ -6,19 +6,21 @@ import (
 
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/mitchellh/mapstructure"
+	"github.com/shumkovdenis/club/server/account"
+	"github.com/shumkovdenis/club/server/core"
 )
 
 var commands = treemap.NewWithStringComparator()
 
 func init() {
-	cmds := []Command{
+	cmds := []core.Command{
 		&Subscribe{},
 		&Unsubscribe{},
 		&Login{},
-		&AccountAuth{},
-		&AccountBalance{},
-		&AccountSession{},
-		&AccountWithdraw{},
+		&account.Authorize{},
+		&account.GetBalance{},
+		&account.GetGameSession{},
+		&account.Withdraw{},
 	}
 
 	for _, cmd := range cmds {
@@ -26,13 +28,22 @@ func init() {
 	}
 }
 
+type command struct {
+	Type string                 `json:"type"`
+	Data map[string]interface{} `json:"data"`
+}
+
+type event struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
 type Conv interface {
 	ToMessage(cmd *command) (interface{}, error)
 	FromMessage(evt interface{}) (*event, error)
 }
 
-type conv struct {
-}
+type conv struct{}
 
 func newConv() Conv {
 	return &conv{}
@@ -59,14 +70,26 @@ func (c *conv) ToMessage(cmd *command) (interface{}, error) {
 }
 
 func (c *conv) FromMessage(msg interface{}) (*event, error) {
-	m, ok := msg.(Event)
+	m, ok := msg.(core.Event)
 	if !ok {
 		return nil, errors.New("message must implement 'Event'")
 	}
 
+	var data interface{}
+
+	if fail, ok := msg.(core.Fail); ok {
+		data = &struct {
+			Code string `json:"code"`
+		}{
+			Code: fail.Code(),
+		}
+	} else {
+		data = msg
+	}
+
 	evt := &event{
 		Type: m.Event(),
-		Data: m,
+		Data: data,
 	}
 
 	return evt, nil

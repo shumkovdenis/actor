@@ -11,6 +11,7 @@ import (
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
+	"github.com/shumkovdenis/club/server/rates"
 )
 
 var log = logger.Get()
@@ -41,7 +42,7 @@ func Start() error {
 	props = actor.FromProducer(newSessionManagerActor)
 	actor.SpawnNamed(props, "sessions")
 
-	props = actor.FromProducer(newRatesActor)
+	props = actor.FromProducer(rates.NewActor)
 	actor.SpawnNamed(props, "rates")
 
 	props = actor.FromProducer(newServerActor)

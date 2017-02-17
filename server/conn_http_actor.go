@@ -2,11 +2,6 @@ package server
 
 import (
 	"net/http"
-	"time"
-
-	"go.uber.org/zap"
-
-	"errors"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/lists/arraylist"
@@ -16,7 +11,6 @@ import (
 type httpConnActor struct {
 	grp    *echo.Group
 	brk    Broker
-	reg    Registry
 	msgs   *arraylist.List
 	brkPID *actor.PID
 }
@@ -29,85 +23,82 @@ func newHTTPConnActor(group *echo.Group) actor.Actor {
 	}
 }
 
-func (state *httpConnActor) Init(reg Registry) {
-	state.reg = reg
-}
-
 func (state *httpConnActor) Receive(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	case *actor.Started:
-		props := actor.FromInstance(newBrokerActor())
-		pid, err := ctx.SpawnNamed(props, "broker")
-		if err != nil {
-			log.Error(err.Error())
-		}
+	// switch msg := ctx.Message().(type) {
+	// case *actor.Started:
+	// 	props := actor.FromInstance(newBrokerActor())
+	// 	pid, err := ctx.SpawnNamed(props, "broker")
+	// 	if err != nil {
+	// 		log.Error(err.Error())
+	// 	}
 
-		state.brkPID = pid
+	// 	state.brkPID = pid
 
-		state.grp.POST("/push", state.push)
-		state.grp.POST("/pull", state.pull)
-	case Event:
-		evt, err := state.reg.FromMessage(msg)
-		if err != nil {
-			log.Error(err.Error())
+	// 	state.grp.POST("/push", state.push)
+	// 	state.grp.POST("/pull", state.pull)
+	// case Event:
+	// 	evt, err := state.reg.FromMessage(msg)
+	// 	if err != nil {
+	// 		log.Error(err.Error())
 
-			return
-		}
+	// 		return
+	// 	}
 
-		sub := state.brk.Contains(evt.Type)
+	// 	sub := state.brk.Contains(evt.Type)
 
-		log.Debug("Event",
-			zap.String("conn", "ws"),
-			zap.String("type", evt.Type),
-			zap.Bool("sub", sub),
-		)
+	// 	log.Debug("Event",
+	// 		zap.String("conn", "ws"),
+	// 		zap.String("type", evt.Type),
+	// 		zap.Bool("sub", sub),
+	// 	)
 
-		if sub {
-			state.msgs.Add(evt)
-		}
-	}
+	// 	if sub {
+	// 		state.msgs.Add(evt)
+	// 	}
+	// }
 }
 
 func (state *httpConnActor) push(c echo.Context) error {
-	cmd := &command{}
-	if err := c.Bind(cmd); err != nil {
-		return err
-	}
+	// cmd := &command{}
+	// if err := c.Bind(cmd); err != nil {
+	// 	return err
+	// }
 
-	log.Debug("Command",
-		zap.String("conn", "http"),
-		zap.String("type", cmd.Type),
-	)
+	// log.Debug("Command",
+	// 	zap.String("conn", "http"),
+	// 	zap.String("type", cmd.Type),
+	// )
 
-	msg, err := state.reg.ToMessage(cmd)
-	if err != nil {
-		return err
-	}
+	// msg, err := state.reg.ToMessage(cmd)
+	// if err != nil {
+	// 	return err
+	// }
 
-	future := state.brkPID.RequestFuture(msg, 1*time.Second)
-	msg, err = future.Result()
-	if err != nil {
-		return err
-	}
+	// future := state.brkPID.RequestFuture(msg, 1*time.Second)
+	// msg, err = future.Result()
+	// if err != nil {
+	// 	return err
+	// }
 
-	evt, err := state.reg.FromMessage(msg)
-	if err != nil {
-		return err
-	}
+	// evt, err := state.reg.FromMessage(msg)
+	// if err != nil {
+	// 	return err
+	// }
 
-	sub := state.brk.Contains(evt.Type)
+	// sub := state.brk.Contains(evt.Type)
 
-	log.Debug("Event",
-		zap.String("conn", "http"),
-		zap.String("type", evt.Type),
-		zap.Bool("sub", sub),
-	)
+	// log.Debug("Event",
+	// 	zap.String("conn", "http"),
+	// 	zap.String("type", evt.Type),
+	// 	zap.Bool("sub", sub),
+	// )
 
-	if !sub {
-		return errors.New("no subscription event: " + evt.Type)
-	}
+	// if !sub {
+	// 	return errors.New("no subscription event: " + evt.Type)
+	// }
 
-	return c.JSON(http.StatusOK, evt)
+	// return c.JSON(http.StatusOK, evt)
+	return nil
 }
 
 func (state *httpConnActor) pull(c echo.Context) error {

@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
+	"github.com/shumkovdenis/club/server/core"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +29,13 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 		state.brokerPID = pid
 
 		go state.reader(ctx)
-	case Event:
+	case *actor.Stopped:
+		if err := state.conn.Close(); err != nil {
+			log.Error("close websocket connection failed",
+				zap.Error(err),
+			)
+		}
+	case core.Event:
 		log.Debug("event",
 			zap.String("conn", "ws"),
 			zap.String("type", msg.Event()),
@@ -36,13 +43,16 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 
 		evt, err := state.conv.FromMessage(msg)
 		if err != nil {
-			log.Error(err.Error())
-
+			log.Error("conv from message failed",
+				zap.Error(err),
+			)
 			return
 		}
 
 		if err := state.conn.WriteJSON(evt); err != nil {
-			log.Error(err.Error())
+			log.Error("write websocket failed",
+				zap.Error(err),
+			)
 		}
 	}
 }
@@ -54,12 +64,15 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 		cmd := &command{}
 		if err := state.conn.ReadJSON(cmd); err != nil {
 			if websocket.IsUnexpectedCloseError(err) {
-				log.Error(err.Error())
+				log.Error("read websocket failed",
+					zap.Error(err),
+				)
 				return
 			}
-
-			// err := newErr(ErrReadJSON).Error(err).LogErr()
-			// ctx.Self().Tell(err)
+			log.Error("read websocket failed",
+				zap.Error(err),
+			)
+			ctx.Self().Tell(&ConnReadFailed{})
 			continue
 		}
 
@@ -70,8 +83,10 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 
 		msg, err := state.conv.ToMessage(cmd)
 		if err != nil {
-			// err := newErr(ErrToMessage).Error(err).LogErr()
-			// ctx.Self().Tell(err)
+			log.Error("conv to message failed",
+				zap.Error(err),
+			)
+			ctx.Self().Tell(&ConnReadFailed{})
 			continue
 		}
 

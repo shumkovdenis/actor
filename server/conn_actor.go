@@ -1,9 +1,10 @@
 package server
 
 import (
-	"time"
+	"go.uber.org/zap"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/shumkovdenis/club/server/core"
 )
 
 type connActor struct {
@@ -15,16 +16,6 @@ func newConnActor() actor.Actor {
 	return &connActor{}
 }
 
-func (*connActor) Name() string {
-	return "connActor"
-}
-
-func (*connActor) Commands() []Command {
-	return []Command{
-		&Login{},
-	}
-}
-
 func (state *connActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
@@ -34,46 +25,47 @@ func (state *connActor) Receive(ctx actor.Context) {
 			SessionID: msg.SessionID,
 		}
 
-		future := state.sessionManagerPID.RequestFuture(getSession, 1*time.Second)
+		future := state.sessionManagerPID.RequestFuture(getSession, Timeout)
 		res, err := future.Result()
 		if err != nil {
-			// err := newErr(ErrLogin).Error(err).LogErr()
-			// ctx.Respond(&LoginFail{err})
+			log.Error("login failed: get session failed",
+				zap.Error(err),
+			)
+			ctx.Respond(&LoginFailed{})
 			return
 		}
 
-		// if err, ok := res.(*Err); ok {
-		// err := newErr(ErrLogin).Wrap(err).LogErr()
-		// ctx.Respond(&LoginFail{err})
-		// 	return
-		// }
-
-		sessionPID := res.(*GetSessionSuccess).SessionPID
+		sessionPID, ok := res.(*actor.PID)
+		if !ok {
+			ctx.Respond(res)
+			return
+		}
 
 		useSession := &UseSession{
 			ConnPID: ctx.Self(),
 		}
 
-		future = sessionPID.RequestFuture(useSession, 1*time.Second)
+		future = sessionPID.RequestFuture(useSession, Timeout)
 		res, err = future.Result()
 		if err != nil {
-			// err := newErr(ErrLogin).Error(err).LogErr()
-			// ctx.Respond(&LoginFail{err})
+			log.Error("login failed: use session failed",
+				zap.Error(err),
+			)
+			ctx.Respond(&LoginFailed{})
 			return
 		}
 
-		// if err, ok := res.(*Err); ok {
-		// err := newErr(ErrLogin).Wrap(err).LogErr()
-		// ctx.Respond(&LoginFail{err})
-		// 	return
-		// }
+		if _, ok := res.(*UseSessionSuccess); !ok {
+			ctx.Respond(res)
+			return
+		}
 
 		state.sessionPID = sessionPID
 
 		ctx.Respond(&LoginSuccess{})
-	case Command:
+	case core.Command:
 		state.sessionPID.Request(msg, ctx.Sender())
-	case Event:
+	case core.Event:
 		ctx.Parent().Tell(msg)
 	}
 }
