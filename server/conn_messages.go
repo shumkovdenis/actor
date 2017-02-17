@@ -12,7 +12,7 @@ func (*ConnReadFailed) Event() string {
 	return "event.conn.failed"
 }
 
-func (*ConnReadFailed) Fail() string {
+func (*ConnReadFailed) Code() string {
 	return "conn_read_failed"
 }
 

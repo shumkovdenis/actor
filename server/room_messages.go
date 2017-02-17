@@ -28,7 +28,7 @@ type RoomNotFound struct{}
 
 func (*RoomNotFound) RoomMessage() {}
 
-func (*RoomNotFound) Fail() string {
+func (*RoomNotFound) Code() string {
 	return "room_not_found"
 }
 
@@ -46,7 +46,7 @@ type RoomFull struct{}
 
 func (*RoomFull) RoomMessage() {}
 
-func (*RoomFull) Fail() string {
+func (*RoomFull) Code() string {
 	return "room_full"
 }
 

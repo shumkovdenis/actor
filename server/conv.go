@@ -77,11 +77,11 @@ func (c *conv) FromMessage(msg interface{}) (*event, error) {
 
 	var data interface{}
 
-	if fail, ok := msg.(core.Fail); ok {
+	if code, ok := msg.(core.Code); ok {
 		data = &struct {
 			Code string `json:"code"`
 		}{
-			Code: fail.Fail(),
+			Code: code.Code(),
 		}
 	} else {
 		data = msg

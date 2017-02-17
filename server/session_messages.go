@@ -23,7 +23,7 @@ type CreateSessionFailed struct{}
 
 func (*CreateSessionFailed) SessionMessage() {}
 
-func (*CreateSessionFailed) Fail() string {
+func (*CreateSessionFailed) Code() string {
 	return "create_session_failed"
 }
 
@@ -37,7 +37,7 @@ type SessionNotFound struct{}
 
 func (*SessionNotFound) SessionMessage() {}
 
-func (*SessionNotFound) Fail() string {
+func (*SessionNotFound) Code() string {
 	return "session_not_found"
 }
 
@@ -55,6 +55,6 @@ type SessionAlreadyUse struct{}
 
 func (*SessionAlreadyUse) SessionMessage() {}
 
-func (*SessionAlreadyUse) Fail() string {
+func (*SessionAlreadyUse) Code() string {
 	return "session_already_use"
 }

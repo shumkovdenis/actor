@@ -39,7 +39,7 @@ func (m *AlreadyAuthorized) Event() string {
 	return "event.account.authorize.failed"
 }
 
-func (*AlreadyAuthorized) Fail() string {
+func (*AlreadyAuthorized) Code() string {
 	return "already_authorized"
 }
 
@@ -51,7 +51,7 @@ func (m *NotAuthorized) Event() string {
 	return "event.account.authorize.failed"
 }
 
-func (*NotAuthorized) Fail() string {
+func (*NotAuthorized) Code() string {
 	return "not_authorized"
 }
 
@@ -63,7 +63,7 @@ func (m *AuthorizationFailed) Event() string {
 	return "event.account.authorize.failed"
 }
 
-func (*AuthorizationFailed) Fail() string {
+func (*AuthorizationFailed) Code() string {
 	return "authorization_failed"
 }
 
@@ -93,7 +93,7 @@ func (*GetBalanceFailed) Event() string {
 	return "event.account.balance.failed"
 }
 
-func (*GetBalanceFailed) Fail() string {
+func (*GetBalanceFailed) Code() string {
 	return "get_balance_failed"
 }
 
@@ -127,7 +127,7 @@ func (*GetGameSessionFailed) Event() string {
 	return "event.account.session.failed"
 }
 
-func (*GetGameSessionFailed) Fail() string {
+func (*GetGameSessionFailed) Code() string {
 	return "get_game_session_failed"
 }
 
@@ -155,7 +155,7 @@ func (*WithdrawFailed) Event() string {
 	return "event.account.withdraw.failed"
 }
 
-func (*WithdrawFailed) Fail() string {
+func (*WithdrawFailed) Code() string {
 	return "withdraw_failed"
 }
 

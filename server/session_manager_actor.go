@@ -60,7 +60,7 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 			return
 		}
 
-		if _, ok := res.(JoinedRoom); !ok {
+		if _, ok := res.(*JoinedRoom); !ok {
 			sessionPID.Stop()
 			ctx.Respond(res)
 			return

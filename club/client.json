@@ -3,7 +3,7 @@
         "#start": {
             "type": "command.login",
             "data": {
-                "session_id": "638dd1df-8484-41a0-b97b-dd03ac0e60f3"
+                "session_id": "1033f6c1-7646-4f53-8659-5b9fea96c289"
             }
         },
         "#subscribe": {
@@ -15,9 +15,9 @@
             }
         },
         "#account_auth": {
-            "type": "command.account.auth",
+            "type": "command.account.authorize",
             "data": {
-                "account": "1000700009",
+                "username": "1000700009",
                 "password": "1234"
             }
         },
@@ -31,7 +31,7 @@
     "events": {
         "event.login.success": "#subscribe",
         "event.subscribe.success": "#account_auth",
-        "event.account.auth.success": "#account_balance",
-        "event.account.balance.success": "#account_withdraw"
+        "event.account.authorized": "#account_balance",
+        "event.account.balance": "#account_withdraw"
     }
 }

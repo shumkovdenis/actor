@@ -16,16 +16,6 @@ import (
 
 var log = logger.Get()
 
-// var regPlugin *registryPlugin
-
-// func init() {
-// 	regPlugin = newRegistryPlugin()
-// }
-
-// func RegistryPlugin() *registryPlugin {
-// 	return regPlugin
-// }
-
 func Start() error {
 	log.Info("Start server",
 		zap.String("version", manifest.Version()),
@@ -36,8 +26,8 @@ func Start() error {
 
 	var props *actor.Props
 
-	// props = actor.FromProducer(newRoomManagerActor)
-	// actor.SpawnNamed(props, "rooms")
+	props = actor.FromProducer(newRoomManagerActor)
+	actor.SpawnNamed(props, "rooms")
 
 	props = actor.FromProducer(newSessionManagerActor)
 	actor.SpawnNamed(props, "sessions")

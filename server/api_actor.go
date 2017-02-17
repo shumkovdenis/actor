@@ -55,8 +55,8 @@ func (state *apiActor) createRoom(c echo.Context) error {
 
 	room, ok := res.(*Room)
 	if !ok {
-		if fail, ok := res.(core.Fail); ok {
-			return c.JSON(http.StatusBadRequest, failResp(fail))
+		if code, ok := res.(core.Code); ok {
+			return c.JSON(http.StatusBadRequest, failResp(code))
 		}
 		return c.NoContent(http.StatusInternalServerError)
 	}
@@ -98,8 +98,8 @@ func (state *apiActor) createSession(c echo.Context) error {
 
 	session, ok := res.(*Session)
 	if !ok {
-		if fail, ok := res.(core.Fail); ok {
-			return c.JSON(http.StatusBadRequest, failResp(fail))
+		if code, ok := res.(core.Code); ok {
+			return c.JSON(http.StatusBadRequest, failResp(code))
 		}
 		return c.NoContent(http.StatusInternalServerError)
 	}

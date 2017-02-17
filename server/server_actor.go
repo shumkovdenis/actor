@@ -8,11 +8,7 @@ import (
 	"github.com/shumkovdenis/club/config"
 )
 
-type Server interface {
-}
-
-type serverActor struct {
-}
+type serverActor struct{}
 
 func newServerActor() actor.Actor {
 	return &serverActor{}
@@ -31,8 +27,6 @@ func (state *serverActor) Receive(ctx actor.Context) {
 		props = actor.FromInstance(newConnManagerActor(e.Group("/conn")))
 		ctx.SpawnNamed(props, "conns")
 
-		// go func() {
 		e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", conf.Port)))
-		// }()
 	}
 }

@@ -4,14 +4,14 @@ import "github.com/shumkovdenis/club/server/core"
 
 type ParseJSONFailed struct{}
 
-func (*ParseJSONFailed) Fail() string {
+func (*ParseJSONFailed) Code() string {
 	return "parse_json_failed"
 }
 
-func failResp(fail core.Fail) interface{} {
+func failResp(code core.Code) interface{} {
 	return &struct {
 		Code string `json:"code"`
 	}{
-		Code: fail.Fail(),
+		Code: code.Code(),
 	}
 }

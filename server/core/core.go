@@ -11,3 +11,7 @@ type Event interface {
 type Fail interface {
 	Fail() string
 }
+
+type Code interface {
+	Code() string
+}
