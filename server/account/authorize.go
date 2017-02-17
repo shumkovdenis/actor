@@ -8,13 +8,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func authorize(account, password string) Outgoing {
+func authorize(username, password string) Message {
 	conf := config.AccountAPI()
 
 	resp, err := resty.R().
 		SetFormData(map[string]string{
 			"auth_submit":   conf.Type + "_CLIENT_AUTH",
-			"auth_username": account,
+			"auth_username": username,
 			"auth_password": password,
 		}).
 		Post(conf.URL)

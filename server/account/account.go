@@ -6,11 +6,7 @@ import (
 
 var log = logger.Get()
 
-type Incoming interface {
-	Account()
-}
-
-type Outgoing interface {
+type Message interface {
 	Account()
 }
 
@@ -19,7 +15,7 @@ type Authorize struct {
 	Password string `mapstructure:"password"`
 }
 
-func (c *Authorize) Account() {}
+func (*Authorize) Account() {}
 
 func (*Authorize) Command() string {
 	return "command.account.authorize"
@@ -29,19 +25,18 @@ type Authorized struct {
 	Categories []Category `json:"categories"`
 }
 
-func (e *Authorized) Account() {}
+func (*Authorized) Account() {}
 
 func (*Authorized) Event() string {
 	return "event.account.authorized"
 }
 
-type AlreadyAuthorized struct {
-}
+type AlreadyAuthorized struct{}
 
-func (e *AlreadyAuthorized) Account() {}
+func (*AlreadyAuthorized) Account() {}
 
-func (e *AlreadyAuthorized) Event() string {
-	return "event.account." + e.Code()
+func (m *AlreadyAuthorized) Event() string {
+	return "event.account.authorize." + m.Code()
 }
 
 func (*AlreadyAuthorized) Code() string {
@@ -50,10 +45,10 @@ func (*AlreadyAuthorized) Code() string {
 
 type NotAuthorized struct{}
 
-func (e *NotAuthorized) Account() {}
+func (*NotAuthorized) Account() {}
 
-func (e *NotAuthorized) Event() string {
-	return "event.account." + e.Code()
+func (m *NotAuthorized) Event() string {
+	return "event.account.authorize." + m.Code()
 }
 
 func (*NotAuthorized) Code() string {
@@ -62,14 +57,106 @@ func (*NotAuthorized) Code() string {
 
 type AuthorizationFailed struct{}
 
-func (e *AuthorizationFailed) Account() {}
+func (*AuthorizationFailed) Account() {}
 
-func (e *AuthorizationFailed) Event() string {
-	return "event.account." + e.Code()
+func (m *AuthorizationFailed) Event() string {
+	return "event.account.authorize." + m.Code()
 }
 
 func (*AuthorizationFailed) Code() string {
 	return "authorization_failed"
+}
+
+type GetBalance struct{}
+
+func (*GetBalance) Account() {}
+
+func (*GetBalance) Command() string {
+	return "command.account.balance"
+}
+
+type Balance struct {
+	Balance float64 `json:"balance"`
+}
+
+func (*Balance) Account() {}
+
+func (*Balance) Event() string {
+	return "event.account.balance"
+}
+
+type GetBalanceFailed struct{}
+
+func (*GetBalanceFailed) Account() {}
+
+func (*GetBalanceFailed) Event() string {
+	return "event.account.balance.failed"
+}
+
+func (*GetBalanceFailed) Code() string {
+	return "get_balance_failed"
+}
+
+type GetGameSession struct {
+	GameID int `mapstructure:"game_id"`
+}
+
+func (*GetGameSession) Account() {}
+
+func (*GetGameSession) Command() string {
+	return "command.account.session"
+}
+
+type GameSession struct {
+	SessionID string `json:"session_id"`
+	GameID    string `json:"game_id"`
+	ServerURL string `json:"server_url"`
+}
+
+func (*GameSession) Account() {}
+
+func (*GameSession) Event() string {
+	return "event.account.session"
+}
+
+type GetGameSessionFailed struct{}
+
+func (*GetGameSessionFailed) Account() {}
+
+func (*GetGameSessionFailed) Event() string {
+	return "event.account.session.failed"
+}
+
+func (*GetGameSessionFailed) Code() string {
+	return "get_game_session_failed"
+}
+
+type Withdraw struct{}
+
+func (*Withdraw) Account() {}
+
+func (*Withdraw) Command() string {
+	return "command.account.withdraw"
+}
+
+type WithdrawSuccess struct{}
+
+func (*WithdrawSuccess) Account() {}
+
+func (*WithdrawSuccess) Event() string {
+	return "event.account.withdraw"
+}
+
+type WithdrawFailed struct{}
+
+func (*WithdrawFailed) Account() {}
+
+func (*WithdrawFailed) Event() string {
+	return "event.account.withdraw.failed"
+}
+
+func (*WithdrawFailed) Code() string {
+	return "withdraw_failed"
 }
 
 type Category struct {
