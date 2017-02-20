@@ -28,21 +28,20 @@ func (state *updateActor) started(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *Check:
 		ctx.SetBehavior(state.checking)
-
-		// actors.Process(check, ctx.Respond)
-
+		res := check()
+		ctx.Respond(res)
 		ctx.SetBehavior(state.started)
 	case *Download:
 		ctx.SetBehavior(state.downloading)
-
-		// actors.Process(download, ctx.Respond)
-
+		ch := download()
+		for res := range ch {
+			ctx.Respond(res)
+		}
 		ctx.SetBehavior(state.started)
 	case *Install:
 		ctx.SetBehavior(state.installing)
-
-		// actors.Process(install, ctx.Respond)
-
+		res := install()
+		ctx.Respond(res)
 		ctx.SetBehavior(state.started)
 	}
 }

@@ -14,7 +14,7 @@ func check() Message {
 	url := conf.PropsURL()
 	path := conf.PropsPath()
 
-	log.Info("Check update",
+	log.Info("check update",
 		zap.String("url", url),
 		zap.String("path", path),
 	)
@@ -42,10 +42,10 @@ func check() Message {
 
 	switch code {
 	case http.StatusOK:
-		log.Info("Update available")
+		log.Info("update available")
 		return &Available{}
 	case http.StatusNotFound:
-		log.Info("Update no")
+		log.Info("update no")
 		return &No{}
 	default:
 		log.Error("check update failed",
