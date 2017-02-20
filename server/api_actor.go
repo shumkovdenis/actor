@@ -55,10 +55,7 @@ func (state *apiActor) createRoom(c echo.Context) error {
 
 	room, ok := res.(*Room)
 	if !ok {
-		if code, ok := res.(core.Code); ok {
-			return c.JSON(http.StatusBadRequest, failResp(code))
-		}
-		return c.NoContent(http.StatusInternalServerError)
+		return badRequest(c, res)
 	}
 
 	resp := &struct {
@@ -79,7 +76,7 @@ func (state *apiActor) createSession(c echo.Context) error {
 		log.Error("api create session failed: parse json failed",
 			zap.Error(err),
 		)
-		return c.JSON(http.StatusBadRequest, failResp(&ParseJSONFailed{}))
+		return badRequest(c, &ParseJSONFailed{})
 	}
 
 	createSession := &CreateSession{
@@ -98,10 +95,7 @@ func (state *apiActor) createSession(c echo.Context) error {
 
 	session, ok := res.(*Session)
 	if !ok {
-		if code, ok := res.(core.Code); ok {
-			return c.JSON(http.StatusBadRequest, failResp(code))
-		}
-		return c.NoContent(http.StatusInternalServerError)
+		return badRequest(c, res)
 	}
 
 	resp := &struct {
@@ -111,4 +105,16 @@ func (state *apiActor) createSession(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, resp)
+}
+
+func badRequest(c echo.Context, msg interface{}) error {
+	if code, ok := msg.(core.Code); ok {
+		resp := &struct {
+			Code string `json:"code"`
+		}{
+			Code: code.Code(),
+		}
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+	return c.NoContent(http.StatusInternalServerError)
 }

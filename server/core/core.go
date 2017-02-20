@@ -8,10 +8,6 @@ type Event interface {
 	Event() string
 }
 
-type Fail interface {
-	Fail() string
-}
-
 type Code interface {
 	Code() string
 }

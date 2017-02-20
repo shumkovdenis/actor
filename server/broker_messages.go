@@ -34,10 +34,6 @@ func (*SubscribeFailed) Event() string {
 	return "event.subscribe.failed"
 }
 
-func (*SubscribeFailed) Code() string {
-	return "subscribe_failed"
-}
-
 type Unsubscribe struct {
 	Topics []string `mapstructure:"topics"`
 }
@@ -66,8 +62,4 @@ func (*UnsubscribeFailed) BrokerMessage() {}
 
 func (*UnsubscribeFailed) Event() string {
 	return "event.unsubscribe.failed"
-}
-
-func (*UnsubscribeFailed) Code() string {
-	return "unsubscribe_failed"
 }

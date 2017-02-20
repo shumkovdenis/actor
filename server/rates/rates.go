@@ -41,10 +41,6 @@ func (*RatesFailed) Event() string {
 	return "event.rates.failed"
 }
 
-func (*RatesFailed) Code() string {
-	return "rates_failed"
-}
-
 type Rate struct {
 	Timestamp uint64  `json:"timestamp"`
 	Value     float64 `json:"value"`
