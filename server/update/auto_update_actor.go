@@ -20,14 +20,19 @@ func newAutoUpdateActor() actor.Actor {
 
 func (state *autoUpdateActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
-	case *actor.Started, *No:
-		state.loop(ctx)
+	case *actor.Started:
+		conf := config.UpdateServer()
+		if conf.AutoUpdate {
+			state.loop(ctx)
+		}
 	case *Join:
 		state.sessions.Add(msg.SessionPID)
 	case *Leave:
 		state.sessions.Remove(msg.SessionPID)
 	case *Available:
 		ctx.Parent().Request(&Download{}, ctx.Self())
+	case *No:
+		state.loop(ctx)
 	case *Complete:
 		ctx.Parent().Request(&Install{}, ctx.Self())
 	case *Ready:

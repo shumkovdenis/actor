@@ -1,5 +1,7 @@
 package server
 
+import "github.com/shumkovdenis/club/server/core"
+
 type BrokerMessage interface {
 	BrokerMessage()
 }
@@ -12,6 +14,15 @@ func (*Subscribe) BrokerMessage() {}
 
 func (*Subscribe) Command() string {
 	return "command.subscribe"
+}
+
+func (m *Subscribe) Contains(evt core.Event) bool {
+	for _, topic := range m.Topics {
+		if topic == evt.Event() {
+			return true
+		}
+	}
+	return false
 }
 
 type SubscribeSuccess struct {
@@ -42,6 +53,15 @@ func (*Unsubscribe) BrokerMessage() {}
 
 func (*Unsubscribe) Command() string {
 	return "command.unsubscribe"
+}
+
+func (m *Unsubscribe) Contains(evt core.Event) bool {
+	for _, topic := range m.Topics {
+		if topic == evt.Event() {
+			return true
+		}
+	}
+	return false
 }
 
 type UnsubscribeSuccess struct {

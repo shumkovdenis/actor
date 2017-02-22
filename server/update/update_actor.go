@@ -2,7 +2,6 @@ package update
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/shumkovdenis/club/config"
 )
 
 type updateActor struct{}
@@ -14,12 +13,8 @@ func NewActor() actor.Actor {
 func (state *updateActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		conf := config.UpdateServer()
-
-		if conf.AutoUpdate {
-			props := actor.FromProducer(newAutoUpdateActor)
-			ctx.SpawnNamed(props, "auto")
-		}
+		props := actor.FromProducer(newAutoUpdateActor)
+		ctx.SpawnNamed(props, "auto")
 
 		ctx.SetBehavior(state.started)
 	}

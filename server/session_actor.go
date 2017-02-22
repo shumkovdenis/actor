@@ -5,13 +5,15 @@ import (
 	"github.com/shumkovdenis/club/server/account"
 	"github.com/shumkovdenis/club/server/core"
 	"github.com/shumkovdenis/club/server/rates"
+	"github.com/shumkovdenis/club/server/update"
 )
 
 type sessionActor struct {
-	roomPID    *actor.PID
-	connPID    *actor.PID
-	ratesPID   *actor.PID
-	accountPID *actor.PID
+	roomPID       *actor.PID
+	connPID       *actor.PID
+	autoUpdatePID *actor.PID
+	ratesPID      *actor.PID
+	accountPID    *actor.PID
 }
 
 func newSessionActor(roomPID *actor.PID) actor.Actor {
@@ -23,6 +25,7 @@ func newSessionActor(roomPID *actor.PID) actor.Actor {
 func (state *sessionActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
+		state.autoUpdatePID = actor.NewLocalPID("update/auto")
 		state.ratesPID = actor.NewLocalPID("rates")
 	case *UseSession:
 		state.connPID = msg.ConnPID
@@ -34,6 +37,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 		ctx.Respond(&UseSessionSuccess{})
 
+		state.autoUpdatePID.Tell(&update.Join{ctx.Self()})
+
 		ctx.SetBehavior(state.used)
 	}
 }
@@ -43,9 +48,13 @@ func (state *sessionActor) used(ctx actor.Context) {
 	case *UseSession:
 		ctx.Respond(&SessionAlreadyUse{})
 	case *Subscribe:
-		state.ratesPID.Tell(&rates.Join{ctx.Self()})
+		if msg.Contains(&rates.Rates{}) {
+			state.ratesPID.Tell(&rates.Join{ctx.Self()})
+		}
 	case *Unsubscribe:
-		state.ratesPID.Tell(&rates.Leave{ctx.Self()})
+		if msg.Contains(&rates.Rates{}) {
+			state.ratesPID.Tell(&rates.Leave{ctx.Self()})
+		}
 	case account.Message:
 		state.accountPID.Request(msg, ctx.Sender())
 	case core.Command:

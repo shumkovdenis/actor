@@ -21,14 +21,14 @@ func install() Message {
 		return &InstallFailed{}
 	}
 
-	if err := manifest.Read(); err != nil {
+	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
 		log.Error("install update failed",
 			zap.Error(err),
 		)
 		return &InstallFailed{}
 	}
 
-	if err := os.Remove(conf.UpdatePath()); err != nil {
+	if err := manifest.Read(); err != nil {
 		log.Error("install update failed",
 			zap.Error(err),
 		)
