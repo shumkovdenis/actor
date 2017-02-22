@@ -12,6 +12,7 @@ import (
 	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/server/rates"
+	"github.com/shumkovdenis/club/server/update"
 )
 
 var log = logger.Get()
@@ -25,6 +26,9 @@ func Start() error {
 	resty.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
 	var props *actor.Props
+
+	props = actor.FromProducer(update.NewActor)
+	actor.SpawnNamed(props, "update")
 
 	props = actor.FromProducer(newRoomManagerActor)
 	actor.SpawnNamed(props, "rooms")

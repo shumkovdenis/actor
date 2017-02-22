@@ -5,8 +5,7 @@ import (
 	"github.com/shumkovdenis/club/config"
 )
 
-type updateActor struct {
-}
+type updateActor struct{}
 
 func NewActor() actor.Actor {
 	return &updateActor{}
@@ -18,6 +17,8 @@ func (state *updateActor) Receive(ctx actor.Context) {
 		conf := config.UpdateServer()
 
 		if conf.AutoUpdate {
+			props := actor.FromProducer(newAutoUpdateActor)
+			ctx.SpawnNamed(props, "auto")
 		}
 
 		ctx.SetBehavior(state.started)

@@ -1,5 +1,7 @@
 package update
 
+import "github.com/AsynkronIT/protoactor-go/actor"
+
 type Message interface {
 	UpdateMessage()
 }
@@ -125,3 +127,15 @@ func (*InstallFailed) UpdateMessage() {}
 func (*InstallFailed) Event() string {
 	return "event.update.install.failed"
 }
+
+type Join struct {
+	SessionPID *actor.PID
+}
+
+func (*Join) RatesMessage() {}
+
+type Leave struct {
+	SessionPID *actor.PID
+}
+
+func (*Leave) RatesMessage() {}
