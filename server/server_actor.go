@@ -20,6 +20,7 @@ func (state *serverActor) Receive(ctx actor.Context) {
 		conf := config.Server()
 
 		e := echo.New()
+		e.Static("/", conf.PublicPath)
 
 		props := actor.FromInstance(newAPIActor(e.Group("/api")))
 		ctx.SpawnNamed(props, "api")

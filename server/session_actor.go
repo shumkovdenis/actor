@@ -35,18 +35,34 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 		state.accountPID = pid
 
-		ctx.Respond(&UseSessionSuccess{})
-
 		state.autoUpdatePID.Tell(&update.Join{ctx.Self()})
 
+		ctx.Respond(&UseSessionSuccess{})
+
 		ctx.SetBehavior(state.used)
+
+		log.Debug("session used")
+	case *FreeSession:
+		ctx.Respond(&SessionNotUsed{})
 	}
 }
 
 func (state *sessionActor) used(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *UseSession:
-		ctx.Respond(&SessionAlreadyUse{})
+		ctx.Respond(&SessionAlreadyUsed{})
+	case *FreeSession:
+		state.accountPID.Stop()
+
+		state.autoUpdatePID.Tell(&update.Leave{ctx.Self()})
+
+		state.ratesPID.Tell(&rates.Leave{ctx.Self()})
+
+		ctx.Respond(&FreeSessionSuccess{})
+
+		ctx.SetBehavior(state.Receive)
+
+		log.Debug("session released")
 	case *Subscribe:
 		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Join{ctx.Self()})

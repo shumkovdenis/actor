@@ -37,7 +37,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 
 		sessionPID, ok := res.(*actor.PID)
 		if !ok {
-			ctx.Respond(res)
+			ctx.Respond(&LoginFailed{res.(core.Code)})
 			return
 		}
 
@@ -56,13 +56,42 @@ func (state *connActor) Receive(ctx actor.Context) {
 		}
 
 		if _, ok := res.(*UseSessionSuccess); !ok {
-			ctx.Respond(res)
+			ctx.Respond(&LoginFailed{res.(core.Code)})
 			return
 		}
 
 		state.sessionPID = sessionPID
 
 		ctx.Respond(&LoginSuccess{})
+
+		ctx.SetBehavior(state.logged)
+	case core.Command:
+		ctx.Respond(&NotLogged{})
+	}
+}
+
+func (state *connActor) logged(ctx actor.Context) {
+	switch msg := ctx.Message().(type) {
+	case *actor.Stopped:
+		log.Debug("conn stopped")
+
+		future := state.sessionPID.RequestFuture(&FreeSession{}, Timeout)
+		res, err := future.Result()
+		if err != nil {
+			log.Error("conn stopped failed: free session failed",
+				zap.Error(err),
+			)
+			return
+		}
+
+		if _, ok := res.(*FreeSessionSuccess); !ok {
+			log.Error("free session failed")
+			return
+		}
+
+		ctx.SetBehavior(state.Receive)
+	case *Login:
+		ctx.Respond(&AlreadyLogged{})
 	case core.Command:
 		state.sessionPID.Request(msg, ctx.Sender())
 	case core.Event:

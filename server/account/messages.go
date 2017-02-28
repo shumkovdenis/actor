@@ -35,7 +35,7 @@ type AlreadyAuthorized struct{}
 
 func (*AlreadyAuthorized) AccountMessage() {}
 
-func (m *AlreadyAuthorized) Event() string {
+func (*AlreadyAuthorized) Event() string {
 	return "event.account.already_authorized"
 }
 
@@ -43,7 +43,7 @@ type NotAuthorized struct{}
 
 func (*NotAuthorized) AccountMessage() {}
 
-func (m *NotAuthorized) Event() string {
+func (*NotAuthorized) Event() string {
 	return "event.account.not_authorized"
 }
 
@@ -82,7 +82,7 @@ func (*GetBalanceFailed) Event() string {
 }
 
 type GetGameSession struct {
-	GameID int `mapstructure:"game_id"`
+	GameID string `mapstructure:"game_id"`
 }
 
 func (*GetGameSession) AccountMessage() {}

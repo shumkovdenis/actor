@@ -1,6 +1,8 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
@@ -15,8 +17,12 @@ type connManagerActor struct {
 
 func newConnManagerActor(group *echo.Group) actor.Actor {
 	return &connManagerActor{
-		group:    group,
-		upgrader: &websocket.Upgrader{},
+		group: group,
+		upgrader: &websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
 	}
 }
 

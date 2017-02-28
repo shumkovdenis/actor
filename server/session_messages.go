@@ -51,10 +51,26 @@ type UseSessionSuccess struct{}
 
 func (*UseSessionSuccess) SessionMessage() {}
 
-type SessionAlreadyUse struct{}
+type SessionAlreadyUsed struct{}
 
-func (*SessionAlreadyUse) SessionMessage() {}
+func (*SessionAlreadyUsed) SessionMessage() {}
 
-func (*SessionAlreadyUse) Code() string {
-	return "session_already_use"
+func (*SessionAlreadyUsed) Code() string {
+	return "session_already_used"
 }
+
+type SessionNotUsed struct{}
+
+func (*SessionNotUsed) SessionMessage() {}
+
+func (*SessionNotUsed) Code() string {
+	return "session_not_used"
+}
+
+type FreeSession struct{}
+
+func (*FreeSession) SessionMessage() {}
+
+type FreeSessionSuccess struct{}
+
+func (*FreeSessionSuccess) SessionMessage() {}

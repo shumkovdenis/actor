@@ -2,7 +2,6 @@ package account
 
 import (
 	"encoding/json"
-	"strconv"
 
 	"go.uber.org/zap"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/shumkovdenis/club/config"
 )
 
-func getGameSession(username, password string, gameID int) Message {
+func getGameSession(username, password string, gameID string) Message {
 	conf := config.AccountAPI()
 
 	resp, err := resty.R().
@@ -18,7 +17,7 @@ func getGameSession(username, password string, gameID int) Message {
 			"auth_submit":   conf.Type + "_CLIENT_SESSION",
 			"auth_username": username,
 			"auth_password": password,
-			"game_id":       strconv.Itoa(gameID),
+			"game_id":       gameID,
 		}).
 		Post(conf.URL)
 	if err != nil {

@@ -36,10 +36,16 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 			)
 		}
 	case core.Event:
-		log.Debug("event",
+		l := log.With(
 			zap.String("conn", "ws"),
 			zap.String("type", msg.Event()),
 		)
+
+		if code, ok := msg.(core.Code); ok {
+			l = l.With(zap.String("code", code.Code()))
+		}
+
+		l.Debug("event")
 
 		evt, err := state.conv.FromMessage(msg)
 		if err != nil {
@@ -63,8 +69,8 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 	for {
 		cmd := &command{}
 		if err := state.conn.ReadJSON(cmd); err != nil {
-			if websocket.IsUnexpectedCloseError(err) {
-				log.Error("read websocket failed",
+			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+				log.Warn("close websocket",
 					zap.Error(err),
 				)
 				return
