@@ -55,8 +55,6 @@ func index(c echo.Context) error {
 
 	state := &struct {
 		Websocket string
-		Username  string
-		Password  string
 		Session   string
 	}{
 		Websocket: conf.WebSocketURL(),
