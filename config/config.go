@@ -3,7 +3,10 @@ package config
 import (
 	"os"
 	"path"
+	"strconv"
 	"time"
+
+	"net/url"
 
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/utils"
@@ -29,8 +32,19 @@ func init() {
 }
 
 type server struct {
+	Host       string
 	Port       int    `mapstructure:"port" validate:"required"`
 	PublicPath string `mapstructure:"public_path" validate:"required"`
+}
+
+func (s *server) WebSocketURL() string {
+	u := url.URL{
+		Scheme: "ws",
+		Host:   s.Host + ":" + strconv.Itoa(s.Port),
+		Path:   "/conn/ws",
+	}
+
+	return u.String()
 }
 
 type accountAPI struct {
@@ -87,6 +101,7 @@ type config struct {
 func new() *config {
 	return &config{
 		Server: &server{
+			Host:       "127.0.0.1",
 			Port:       8282,
 			PublicPath: "public",
 		},

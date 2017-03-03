@@ -1,13 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <title>React App</title>
+  <script>
+    window.INIT_STATE = {
+        socket: { url: "ws://127.0.0.1:8282/ws?conn=web" }, player: {
+          remember: !0, account: "1191100006",
+          password: "3129"
+        }, machine: { lang: "ru", assets: "games/Assets/desktop/web/flash/" },
+        websocket: "ws://127.0.0.1:8282/conn/ws",
+        username: "1191100006",
+        password: "3129",
+        session: "8588bcd3-6100-4b41-9643-ffbdf17b8a0d"
+      }
+  </script>
+  <link href="/static/css/main.5d8358e2.css" rel="stylesheet">
 </head>
 
 <body>
-    <p>0.0.1</p>
+  <div id="root"></div>
+  <script type="text/javascript" src="/static/js/main.b1200f19.js"></script>
 </body>
 
 </html>
