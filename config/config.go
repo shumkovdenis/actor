@@ -16,9 +16,9 @@ import (
 const (
 	File = "config.toml"
 
-	appName   = "club"
-	propsFile = "props.json"
-	dataFile  = "data.zip"
+	appName         = "club"
+	updatePropsFile = "props.json"
+	updateDataFile  = "data.zip"
 )
 
 var (
@@ -72,19 +72,19 @@ func (c *updateServer) UpdatePath() string {
 }
 
 func (c *updateServer) PropsURL() string {
-	return c.updateURL() + propsFile
+	return c.updateURL() + updatePropsFile
 }
 
 func (c *updateServer) PropsPath() string {
-	return path.Join(c.UpdatePath(), propsFile)
+	return path.Join(c.UpdatePath(), updatePropsFile)
 }
 
 func (c *updateServer) DataURL() string {
-	return c.updateURL() + dataFile
+	return c.updateURL() + updateDataFile
 }
 
 func (c *updateServer) DataPath() string {
-	return path.Join(c.UpdatePath(), dataFile)
+	return path.Join(c.UpdatePath(), updateDataFile)
 }
 
 func (c *updateServer) AppPath() string {

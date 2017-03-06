@@ -12,11 +12,14 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gorilla/websocket"
+	"github.com/shumkovdenis/club/logger"
 
 	"io/ioutil"
 
 	"fmt"
 )
+
+var log = logger.Get()
 
 type message struct {
 	Type string      `json:"type"`
