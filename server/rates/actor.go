@@ -53,7 +53,10 @@ func (state *ratesActor) start() {
 }
 
 func (state *ratesActor) stop() {
-	state.ticker.Stop()
+	if state.ticker != nil {
+		state.ticker.Stop()
+		state.ticker = nil
+	}
 }
 
 func (state *ratesActor) tell(msg interface{}) {
