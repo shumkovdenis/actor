@@ -132,10 +132,10 @@ type Join struct {
 	SessionPID *actor.PID
 }
 
-func (*Join) RatesMessage() {}
+func (*Join) UpdateMessage() {}
 
 type Leave struct {
 	SessionPID *actor.PID
 }
 
-func (*Leave) RatesMessage() {}
+func (*Leave) UpdateMessage() {}
