@@ -3,7 +3,10 @@ package config
 import (
 	"os"
 	"path"
+	"strconv"
 	"time"
+
+	"net/url"
 
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/utils"
@@ -13,9 +16,9 @@ import (
 const (
 	File = "config.toml"
 
-	appName   = "club"
-	propsFile = "props.json"
-	dataFile  = "data.zip"
+	appName         = "club"
+	updatePropsFile = "props.json"
+	updateDataFile  = "data.zip"
 )
 
 var (
@@ -29,8 +32,19 @@ func init() {
 }
 
 type server struct {
+	Host       string
 	Port       int    `mapstructure:"port" validate:"required"`
 	PublicPath string `mapstructure:"public_path" validate:"required"`
+}
+
+func (s *server) WebSocketURL() string {
+	u := url.URL{
+		Scheme: "ws",
+		Host:   s.Host + ":" + strconv.Itoa(s.Port),
+		Path:   "/conn/ws",
+	}
+
+	return u.String()
 }
 
 type accountAPI struct {
@@ -58,19 +72,19 @@ func (c *updateServer) UpdatePath() string {
 }
 
 func (c *updateServer) PropsURL() string {
-	return c.updateURL() + propsFile
+	return c.updateURL() + updatePropsFile
 }
 
 func (c *updateServer) PropsPath() string {
-	return path.Join(c.UpdatePath(), propsFile)
+	return path.Join(c.UpdatePath(), updatePropsFile)
 }
 
 func (c *updateServer) DataURL() string {
-	return c.updateURL() + dataFile
+	return c.updateURL() + updateDataFile
 }
 
 func (c *updateServer) DataPath() string {
-	return path.Join(c.UpdatePath(), dataFile)
+	return path.Join(c.UpdatePath(), updateDataFile)
 }
 
 func (c *updateServer) AppPath() string {
@@ -87,6 +101,7 @@ type config struct {
 func new() *config {
 	return &config{
 		Server: &server{
+			Host:       "127.0.0.1",
 			Port:       8282,
 			PublicPath: "public",
 		},
