@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/shumkovdenis/club/server/account"
 	"github.com/shumkovdenis/club/server/core"
+	"github.com/shumkovdenis/club/server/update"
 )
 
 var commands = treemap.NewWithStringComparator()
@@ -17,6 +18,10 @@ func init() {
 		&Subscribe{},
 		&Unsubscribe{},
 		&Login{},
+		&update.Check{},
+		&update.Download{},
+		&update.Install{},
+		&update.Restart{},
 		&account.Authorize{},
 		&account.GetBalance{},
 		&account.GetGameSession{},

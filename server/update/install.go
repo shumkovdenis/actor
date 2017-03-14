@@ -3,6 +3,7 @@ package update
 import (
 	"os"
 
+	"github.com/Jeffail/gabs"
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/packer"
@@ -21,12 +22,15 @@ func install() Message {
 		return &InstallFailed{}
 	}
 
-	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
+	json, err := gabs.ParseJSONFile(conf.PropsPath())
+	if err != nil {
 		log.Error("install update failed",
 			zap.Error(err),
 		)
 		return &InstallFailed{}
 	}
+
+	restart := json.Path("restart").Data().(bool)
 
 	if err := manifest.Read(); err != nil {
 		log.Error("install update failed",
@@ -35,9 +39,20 @@ func install() Message {
 		return &InstallFailed{}
 	}
 
+	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
+		log.Error("remove update path failed",
+			zap.Error(err),
+		)
+	}
+
 	log.Info("install update completed",
+		zap.Bool("restart", restart),
 		zap.String("version", manifest.Version()),
 	)
+
+	if restart {
+		return &Wait{}
+	}
 
 	return &Ready{}
 }

@@ -2,6 +2,7 @@ package update
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/config"
@@ -40,17 +41,24 @@ func check() Message {
 
 	code := resp.HTTPResponse.StatusCode
 
-	switch code {
-	case http.StatusOK:
+	if code == http.StatusOK {
 		log.Info("update available")
 		return &Available{}
-	case http.StatusNotFound:
+	}
+
+	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
+		log.Error("remove update path failed",
+			zap.Error(err),
+		)
+	}
+
+	if code == http.StatusNotFound || code == http.StatusForbidden {
 		log.Info("update no")
 		return &No{}
-	default:
-		log.Error("check update failed",
-			zap.Int("code", code),
-		)
-		return &CheckFailed{}
 	}
+
+	log.Error("check update failed",
+		zap.Int("code", code),
+	)
+	return &CheckFailed{}
 }

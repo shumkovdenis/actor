@@ -31,7 +31,9 @@ func (state *updateActor) started(ctx actor.Context) {
 		ctx.SetBehavior(state.downloading)
 		ch := download()
 		for res := range ch {
-			ctx.Respond(res)
+			if _, ok := res.(*Progress); !ok {
+				ctx.Respond(res)
+			}
 		}
 		ctx.SetBehavior(state.started)
 	case *Install:
@@ -39,6 +41,8 @@ func (state *updateActor) started(ctx actor.Context) {
 		res := install()
 		ctx.Respond(res)
 		ctx.SetBehavior(state.started)
+	case *Restart:
+		ctx.Respond(&Relaunch{})
 	}
 }
 

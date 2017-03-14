@@ -35,7 +35,7 @@ func (state *autoUpdateActor) Receive(ctx actor.Context) {
 		state.loop(ctx)
 	case *Complete:
 		ctx.Parent().Request(&Install{}, ctx.Self())
-	case *Ready:
+	case *Ready, *Wait:
 		state.tell(msg)
 		state.loop(ctx)
 	}

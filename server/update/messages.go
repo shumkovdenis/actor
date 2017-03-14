@@ -112,12 +112,12 @@ func (*Ready) Event() string {
 	return "event.update.install.ready"
 }
 
-type Restart struct{}
+type Wait struct{}
 
-func (*Restart) UpdateMessage() {}
+func (*Wait) UpdateMessage() {}
 
-func (*Restart) Event() string {
-	return "event.update.install.restart"
+func (*Wait) Event() string {
+	return "event.update.install.wait"
 }
 
 type InstallFailed struct{}
@@ -126,6 +126,22 @@ func (*InstallFailed) UpdateMessage() {}
 
 func (*InstallFailed) Event() string {
 	return "event.update.install.failed"
+}
+
+type Restart struct{}
+
+func (*Restart) UpdateMessage() {}
+
+func (*Restart) Command() string {
+	return "command.update.restart"
+}
+
+type Relaunch struct{}
+
+func (*Relaunch) UpdateMessage() {}
+
+func (*Relaunch) Event() string {
+	return "event.update.relaunch"
 }
 
 type Join struct {

@@ -18,7 +18,7 @@ import (
 var log = logger.Get()
 
 func Start() error {
-	log.Info("Start server",
+	log.Info("start server",
 		zap.String("version", manifest.Version()),
 		zap.Int("port", config.Server().Port),
 	)

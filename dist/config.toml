@@ -7,6 +7,6 @@ url = "http://currency.silver-pay.com:3030/rates"
 get_interval = 1000
 
 [update_server]
-url = "http://localhost:8080"
+url = "http://gameres-cdn-bucket.s3.amazonaws.com/club/update"
 auto_update = false
 check_interval = 5000

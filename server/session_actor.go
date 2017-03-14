@@ -40,8 +40,6 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 		ctx.Respond(&UseSessionSuccess{})
 
 		ctx.SetBehavior(state.used)
-
-		log.Debug("session used")
 	case *FreeSession:
 		ctx.Respond(&SessionNotUsed{})
 	}
@@ -61,8 +59,6 @@ func (state *sessionActor) used(ctx actor.Context) {
 		ctx.Respond(&FreeSessionSuccess{})
 
 		ctx.SetBehavior(state.Receive)
-
-		log.Debug("session released")
 	case *Subscribe:
 		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Join{ctx.Self()})
