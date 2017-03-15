@@ -52,13 +52,16 @@ func index(c echo.Context) error {
 	conf := config.Server()
 
 	session := c.QueryParam("session")
+	update := c.QueryParam("update")
 
 	state := &struct {
 		Websocket string
 		Session   string
+		Update    bool
 	}{
 		Websocket: conf.WebSocketURL(),
 		Session:   session,
+		Update:    update == "true",
 	}
 
 	return c.Render(http.StatusOK, "index", state)
