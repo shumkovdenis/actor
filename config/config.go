@@ -19,6 +19,7 @@ const (
 	appName         = "club"
 	updatePropsFile = "props.json"
 	updateDataFile  = "data.zip"
+	updateDataDir   = "data"
 )
 
 var (
@@ -85,6 +86,14 @@ func (c *updateServer) DataURL() string {
 
 func (c *updateServer) DataPath() string {
 	return path.Join(c.UpdatePath(), updateDataFile)
+}
+
+func (c *updateServer) DataDir() string {
+	return path.Join(c.UpdatePath(), updateDataDir)
+}
+
+func (c *updateServer) NewAppFile() string {
+	return path.Join(c.DataDir(), appName)
 }
 
 func (c *updateServer) AppPath() string {

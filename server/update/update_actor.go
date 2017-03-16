@@ -2,6 +2,7 @@ package update
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/shumkovdenis/club/config"
 )
 
 type updateActor struct{}
@@ -42,7 +43,11 @@ func (state *updateActor) started(ctx actor.Context) {
 		ctx.Respond(res)
 		ctx.SetBehavior(state.started)
 	case *Restart:
-		ctx.Respond(&Relaunch{})
+		conf := config.UpdateServer()
+		ctx.Respond(&Relaunch{
+			UpdateDataFile: conf.DataPath(),
+			NewServerFile:  conf.NewAppFile(),
+		})
 	}
 }
 

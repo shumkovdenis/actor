@@ -136,7 +136,10 @@ func (*Restart) Command() string {
 	return "command.update.restart"
 }
 
-type Relaunch struct{}
+type Relaunch struct {
+	UpdateDataFile string `json:"update_data_file"`
+	NewServerFile  string `json:"new_server_file"`
+}
 
 func (*Relaunch) UpdateMessage() {}
 

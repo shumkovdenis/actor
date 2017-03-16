@@ -15,13 +15,6 @@ func install() Message {
 
 	log.Info("install update")
 
-	if err := packer.Unpack(conf.DataPath(), conf.AppPath()); err != nil {
-		log.Error("install update failed",
-			zap.Error(err),
-		)
-		return &InstallFailed{}
-	}
-
 	json, err := gabs.ParseJSONFile(conf.PropsPath())
 	if err != nil {
 		log.Error("install update failed",
@@ -31,6 +24,24 @@ func install() Message {
 	}
 
 	restart := json.Path("restart").Data().(bool)
+
+	if restart {
+		if err := packer.Unpack(conf.DataPath(), conf.DataDir()); err != nil {
+			log.Error("install update failed",
+				zap.Error(err),
+			)
+			return &InstallFailed{}
+		}
+
+		return &Wait{}
+	}
+
+	if err := packer.Unpack(conf.DataPath(), conf.AppPath()); err != nil {
+		log.Error("install update failed",
+			zap.Error(err),
+		)
+		return &InstallFailed{}
+	}
 
 	if err := manifest.Read(); err != nil {
 		log.Error("install update failed",
@@ -49,10 +60,6 @@ func install() Message {
 		zap.Bool("restart", restart),
 		zap.String("version", manifest.Version()),
 	)
-
-	if restart {
-		return &Wait{}
-	}
 
 	return &Ready{}
 }
