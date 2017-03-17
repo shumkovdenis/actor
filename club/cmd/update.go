@@ -4,14 +4,17 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/packer"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var (
 	updFile string
 	appPath string
 	appFile string
+	logFile string
 )
 
 var updateCmd = &cobra.Command{
@@ -19,9 +22,18 @@ var updateCmd = &cobra.Command{
 	Short: "Update",
 	Long:  `Update.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var log = logger.File(logFile)
+
+		log.Info("start update")
+
 		if err := packer.Unpack(updFile, appPath); err != nil {
+			log.Error("unpack failed",
+				zap.Error(err),
+			)
 			return err
 		}
+
+		log.Info("unpack complete")
 
 		var c *exec.Cmd
 		if runtime.GOOS == "darwin" {
@@ -30,7 +42,12 @@ var updateCmd = &cobra.Command{
 			c = exec.Command(appFile)
 		}
 
+		log.Info("start app")
+
 		if err := c.Start(); err != nil {
+			log.Error("start app failed",
+				zap.Error(err),
+			)
 			return err
 		}
 
@@ -41,7 +58,8 @@ var updateCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(updateCmd)
 
-	unpackCmd.Flags().StringVarP(&updFile, "source", "s", "", "Update file")
-	unpackCmd.Flags().StringVarP(&appPath, "target", "t", "", "Application path")
-	unpackCmd.Flags().StringVarP(&appFile, "app", "a", "", "Application file")
+	updateCmd.Flags().StringVarP(&updFile, "source", "s", "", "Update file")
+	updateCmd.Flags().StringVarP(&appPath, "target", "t", "", "Application path")
+	updateCmd.Flags().StringVarP(&appFile, "app", "a", "", "Application file")
+	updateCmd.Flags().StringVarP(&logFile, "log", "l", "", "Log file")
 }

@@ -11,3 +11,8 @@ func init() {
 func Get() *zap.Logger {
 	return l
 }
+
+func File(path string) *zap.Logger {
+	w, _, _ := zap.Open(path)
+	return l.WithOptions(zap.ErrorOutput(w))
+}
