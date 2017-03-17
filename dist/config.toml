@@ -1,6 +1,10 @@
+port = 8282
+
 [account_api]
 url = "https://silver-pay.com/auth/clientjson"
 type = "BINOPT"
+jackpots_tops_interval = 5000
+jackpots_list_interval = 5000
 
 [rates_api]
 url = "http://currency.silver-pay.com:3030/rates"

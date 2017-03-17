@@ -14,7 +14,6 @@ var (
 	updFile string
 	appPath string
 	appFile string
-	logFile string
 )
 
 var updateCmd = &cobra.Command{
@@ -22,7 +21,8 @@ var updateCmd = &cobra.Command{
 	Short: "Update",
 	Long:  `Update.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var log = logger.File(logFile)
+		logger.InitProduction(logFile)
+		log := logger.Get()
 
 		log.Info("start update")
 
@@ -61,5 +61,4 @@ func init() {
 	updateCmd.Flags().StringVarP(&updFile, "source", "s", "", "Update file")
 	updateCmd.Flags().StringVarP(&appPath, "target", "t", "", "Application path")
 	updateCmd.Flags().StringVarP(&appFile, "app", "a", "", "Application file")
-	updateCmd.Flags().StringVarP(&logFile, "log", "l", "", "Log file")
 }

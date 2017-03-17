@@ -20,6 +20,13 @@ func check() Message {
 		zap.String("path", path),
 	)
 
+	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
+		log.Error("remove old update failed",
+			zap.Error(err),
+		)
+		return &CheckFailed{}
+	}
+
 	req, err := grab.NewRequest(url)
 	if err != nil {
 		log.Error("check update failed",
@@ -44,12 +51,6 @@ func check() Message {
 	if code == http.StatusOK {
 		log.Info("update available")
 		return &Available{}
-	}
-
-	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
-		log.Error("remove update path failed",
-			zap.Error(err),
-		)
 	}
 
 	if code == http.StatusNotFound || code == http.StatusForbidden {

@@ -1,12 +1,15 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path"
 	"strconv"
 	"time"
 
 	"net/url"
+
+	"net"
 
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/utils"
@@ -49,8 +52,10 @@ func (s *server) WebSocketURL() string {
 }
 
 type accountAPI struct {
-	URL  string `mapstructure:"url" validate:"required,url"`
-	Type string `mapstructure:"type" validate:"eq=ALLIN|eq=BINOPT"`
+	URL                  string        `mapstructure:"url" validate:"required,url"`
+	Type                 string        `mapstructure:"type" validate:"eq=ALLIN|eq=BINOPT"`
+	JackpotsTopsInterval time.Duration `mapstructure:"jackpots_tops_interval" validate:"min=5000"`
+	JackpotsListInterval time.Duration `mapstructure:"jackpots_list_interval" validate:"min=5000"`
 }
 
 type ratesAPI struct {
@@ -114,7 +119,10 @@ func new() *config {
 			Port:       8282,
 			PublicPath: "public",
 		},
-		AccountAPI: &accountAPI{},
+		AccountAPI: &accountAPI{
+			JackpotsTopsInterval: 5000,
+			JackpotsListInterval: 5000,
+		},
 		RatesAPI: &ratesAPI{
 			GetInterval: 5000,
 		},
@@ -146,6 +154,12 @@ func Viper() *viper.Viper {
 }
 
 func Read(file string) error {
+	ip, err := getIP()
+	if err != nil {
+		return err
+	}
+	c.Server.Host = ip
+
 	v.SetConfigType("toml")
 	v.SetConfigFile(file)
 
@@ -162,4 +176,20 @@ func Read(file string) error {
 	}
 
 	return nil
+}
+
+func getIP() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addrs {
+		ip, ok := addr.(*net.IPNet)
+		if ok && !ip.IP.IsLoopback() && ip.IP.To4() != nil {
+			return ip.IP.String(), nil
+		}
+	}
+
+	return "", errors.New("problem get ip")
 }

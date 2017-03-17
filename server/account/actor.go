@@ -42,5 +42,8 @@ func (state *accountActor) authorized(ctx actor.Context) {
 		if _, ok := res.(*WithdrawSuccess); ok {
 			ctx.SetBehavior(state.Receive)
 		}
+	case *Cashback:
+		res := cashback(state.username, state.password)
+		ctx.Respond(res)
 	}
 }

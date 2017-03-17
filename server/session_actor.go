@@ -4,16 +4,20 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/shumkovdenis/club/server/account"
 	"github.com/shumkovdenis/club/server/core"
+	"github.com/shumkovdenis/club/server/jackpots/list"
+	"github.com/shumkovdenis/club/server/jackpots/tops"
 	"github.com/shumkovdenis/club/server/rates"
 	"github.com/shumkovdenis/club/server/update"
 )
 
 type sessionActor struct {
-	roomPID       *actor.PID
-	connPID       *actor.PID
-	autoUpdatePID *actor.PID
-	ratesPID      *actor.PID
-	accountPID    *actor.PID
+	roomPID         *actor.PID
+	connPID         *actor.PID
+	autoUpdatePID   *actor.PID
+	ratesPID        *actor.PID
+	jackpotsTopsPID *actor.PID
+	jackpotsListPID *actor.PID
+	accountPID      *actor.PID
 }
 
 func newSessionActor(roomPID *actor.PID) actor.Actor {
@@ -27,6 +31,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 	case *actor.Started:
 		state.autoUpdatePID = actor.NewLocalPID("update/auto")
 		state.ratesPID = actor.NewLocalPID("rates")
+		state.jackpotsTopsPID = actor.NewLocalPID("jackpots/tops")
+		state.jackpotsListPID = actor.NewLocalPID("jackpots/list")
 	case *UseSession:
 		state.connPID = msg.ConnPID
 
@@ -60,12 +66,22 @@ func (state *sessionActor) used(ctx actor.Context) {
 
 		ctx.SetBehavior(state.Receive)
 	case *Subscribe:
-		if msg.Contains(&rates.Rates{}) {
+		switch true {
+		case msg.Contains(&rates.Rates{}):
 			state.ratesPID.Tell(&rates.Join{ctx.Self()})
+		case msg.Contains(&tops.Tops{}):
+			state.jackpotsTopsPID.Tell(&tops.Join{ctx.Self()})
+		case msg.Contains(&list.List{}):
+			state.jackpotsListPID.Tell(&list.Join{ctx.Self()})
 		}
 	case *Unsubscribe:
-		if msg.Contains(&rates.Rates{}) {
+		switch true {
+		case msg.Contains(&rates.Rates{}):
 			state.ratesPID.Tell(&rates.Leave{ctx.Self()})
+		case msg.Contains(&tops.Tops{}):
+			state.jackpotsTopsPID.Tell(&tops.Leave{ctx.Self()})
+		case msg.Contains(&list.List{}):
+			state.jackpotsListPID.Tell(&list.Leave{ctx.Self()})
 		}
 	case account.Message:
 		state.accountPID.Request(msg, ctx.Sender())

@@ -11,6 +11,8 @@ import (
 	"github.com/shumkovdenis/club/config"
 	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
+	"github.com/shumkovdenis/club/server/jackpots/list"
+	"github.com/shumkovdenis/club/server/jackpots/tops"
 	"github.com/shumkovdenis/club/server/rates"
 	"github.com/shumkovdenis/club/server/update"
 )
@@ -35,6 +37,12 @@ func Start() error {
 
 	props = actor.FromProducer(newSessionManagerActor)
 	actor.SpawnNamed(props, "sessions")
+
+	props = actor.FromProducer(tops.NewActor)
+	actor.SpawnNamed(props, "jackpots/tops")
+
+	props = actor.FromProducer(list.NewActor)
+	actor.SpawnNamed(props, "jackpots/list")
 
 	props = actor.FromProducer(rates.NewActor)
 	actor.SpawnNamed(props, "rates")

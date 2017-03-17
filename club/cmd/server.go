@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/manifest"
 	"github.com/shumkovdenis/club/server"
 	"github.com/spf13/cobra"
@@ -22,6 +23,12 @@ var serverCmd = &cobra.Command{
 
 		if err := config.Read(cfgFile); err != nil {
 			return fmt.Errorf("read config failed: %s", err)
+		}
+
+		if isDev {
+			logger.InitDevelopment(logFile)
+		} else {
+			logger.InitProduction(logFile)
 		}
 
 		if err := server.Start(); err != nil {

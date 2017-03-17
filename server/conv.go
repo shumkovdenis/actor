@@ -8,6 +8,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/shumkovdenis/club/server/account"
 	"github.com/shumkovdenis/club/server/core"
+	"github.com/shumkovdenis/club/server/jackpots/list"
+	"github.com/shumkovdenis/club/server/jackpots/tops"
 	"github.com/shumkovdenis/club/server/update"
 )
 
@@ -26,6 +28,9 @@ func init() {
 		&account.GetBalance{},
 		&account.GetGameSession{},
 		&account.Withdraw{},
+		&account.Cashback{},
+		&tops.Get{},
+		&list.Get{},
 	}
 
 	for _, cmd := range cmds {

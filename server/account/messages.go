@@ -135,6 +135,32 @@ func (*WithdrawFailed) Event() string {
 	return "event.account.withdraw.failed"
 }
 
+type Cashback struct{}
+
+func (*Cashback) AccountMessage() {}
+
+func (*Cashback) Command() string {
+	return "command.account.cashback"
+}
+
+type CashbackSuccess struct {
+	Cashback float64 `json:"cashback"`
+}
+
+func (*CashbackSuccess) AccountMessage() {}
+
+func (*CashbackSuccess) Event() string {
+	return "event.account.cashback"
+}
+
+type CashbackFailed struct{}
+
+func (*CashbackFailed) AccountMessage() {}
+
+func (*CashbackFailed) Event() string {
+	return "event.account.cashback.failed"
+}
+
 type Category struct {
 	Title string `json:"title"`
 	Games []Game `json:"games"`
