@@ -24,6 +24,6 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&logFile, "log", "l", "", "Log file.")
-	isDev = *RootCmd.PersistentFlags().BoolP("dev", "d", false, "Development mode.")
+	RootCmd.PersistentFlags().StringVarP(&logFile, "log", "l", "", "Log file")
+	isDev = *RootCmd.PersistentFlags().Bool("dev", false, "Development mode")
 }
