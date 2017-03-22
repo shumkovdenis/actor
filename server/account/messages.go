@@ -161,6 +161,60 @@ func (*CashbackFailed) Event() string {
 	return "event.account.cashback.failed"
 }
 
+type GetJackpotsTops struct{}
+
+func (*GetJackpotsTops) AccountMessage() {}
+
+func (*GetJackpotsTops) Command() string {
+	return "command.account.jackpots.tops"
+}
+
+type JackpotsTops struct {
+	Tops []Jackpot
+}
+
+func (*JackpotsTops) AccountMessage() {}
+
+func (*JackpotsTops) Event() string {
+	return "event.account.jackpots.tops"
+}
+
+type GetJackpotsTopsFailed struct{}
+
+func (*GetJackpotsTopsFailed) AccountMessage() {}
+
+func (*GetJackpotsTopsFailed) Event() string {
+	return "event.account.jackpots.tops.failed"
+}
+
+type GetJackpotsList struct{}
+
+func (*GetJackpotsList) AccountMessage() {}
+
+func (*GetJackpotsList) Command() string {
+	return "command.account.jackpots.list"
+}
+
+type JackpotsList struct {
+	Large  float64 `json:"large"`
+	Medium float64 `json:"medium"`
+	Small  float64 `json:"small"`
+}
+
+func (*JackpotsList) AccountMessage() {}
+
+func (*JackpotsList) Event() string {
+	return "event.account.jackpots.list"
+}
+
+type GetJackpotsListFailed struct{}
+
+func (*GetJackpotsListFailed) AccountMessage() {}
+
+func (*GetJackpotsListFailed) Event() string {
+	return "event.account.jackpots.list.failed"
+}
+
 type Category struct {
 	Title string `json:"title"`
 	Games []Game `json:"games"`
@@ -170,4 +224,10 @@ type Game struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
 	Thumb string `json:"thumb"`
+}
+
+type Jackpot struct {
+	Account string `json:"account"`
+	Win     string `json:"win"`
+	Date    string `json:"date"`
 }

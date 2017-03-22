@@ -23,29 +23,29 @@ type Leave struct {
 
 func (*Leave) JackpotsTopsMessage() {}
 
-type Get struct{}
+type GetJackpotsTops struct{}
 
-func (*Get) JackpotsTopsMessage() {}
+func (*GetJackpotsTops) JackpotsTopsMessage() {}
 
-func (*Get) Command() string {
+func (*GetJackpotsTops) Command() string {
 	return "command.jackpots.tops"
 }
 
-type Tops struct {
+type JackpotsTops struct {
 	Tops []Jackpot
 }
 
-func (*Tops) JackpotsTopsMessage() {}
+func (*JackpotsTops) JackpotsTopsMessage() {}
 
-func (*Tops) Event() string {
+func (*JackpotsTops) Event() string {
 	return "event.jackpots.tops"
 }
 
-type GetFailed struct{}
+type GetJackpotsTopsFailed struct{}
 
-func (*GetFailed) JackpotsTopsMessage() {}
+func (*GetJackpotsTopsFailed) JackpotsTopsMessage() {}
 
-func (*GetFailed) Event() string {
+func (*GetJackpotsTopsFailed) Event() string {
 	return "event.jackpots.tops.failed"
 }
 

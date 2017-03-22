@@ -45,5 +45,8 @@ func (state *accountActor) authorized(ctx actor.Context) {
 	case *Cashback:
 		res := cashback(state.username, state.password)
 		ctx.Respond(res)
+	case *GetJackpotsTops:
+		res := jackpotsTops(state.username, state.password)
+		ctx.Respond(res)
 	}
 }

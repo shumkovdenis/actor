@@ -23,30 +23,30 @@ type Leave struct {
 
 func (*Leave) JackpotsListMessage() {}
 
-type Get struct{}
+type GetJackpotsList struct{}
 
-func (*Get) JackpotsListMessage() {}
+func (*GetJackpotsList) JackpotsListMessage() {}
 
-func (*Get) Command() string {
+func (*GetJackpotsList) Command() string {
 	return "command.jackpots.list"
 }
 
-type List struct {
+type JackpotsList struct {
 	Large  float64 `json:"large"`
 	Medium float64 `json:"medium"`
 	Small  float64 `json:"small"`
 }
 
-func (*List) JackpotsListMessage() {}
+func (*JackpotsList) JackpotsListMessage() {}
 
-func (*List) Event() string {
+func (*JackpotsList) Event() string {
 	return "event.jackpots.list"
 }
 
-type GetFailed struct{}
+type GetJackpotsListFailed struct{}
 
-func (*GetFailed) JackpotsListMessage() {}
+func (*GetJackpotsListFailed) JackpotsListMessage() {}
 
-func (*GetFailed) Event() string {
+func (*GetJackpotsListFailed) Event() string {
 	return "event.jackpots.list.failed"
 }

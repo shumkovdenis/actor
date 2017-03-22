@@ -46,6 +46,7 @@ func authorize(username, password string) Message {
 	if res.Result == "Error" {
 		log.Error("authorization failed",
 			zap.String("result", res.Result),
+			zap.Int("code", res.Code),
 		)
 		return &AuthorizationFailed{}
 	}

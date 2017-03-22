@@ -40,6 +40,7 @@ func withdraw(username, password string) Message {
 	if res.Result == "Error" {
 		log.Error("withdraw failed",
 			zap.String("result", res.Result),
+			zap.Int("code", res.Code),
 		)
 		return &WithdrawFailed{}
 	}

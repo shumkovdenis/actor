@@ -41,6 +41,7 @@ func getBalance(username, password string) Message {
 	if res.Result == "Error" {
 		log.Error("get balance failed",
 			zap.String("result", res.Result),
+			zap.Int("code", res.Code),
 		)
 		return &GetBalanceFailed{}
 	}

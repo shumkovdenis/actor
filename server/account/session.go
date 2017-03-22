@@ -44,6 +44,7 @@ func getGameSession(username, password string, gameID string) Message {
 	if res.Result == "Error" {
 		log.Error("get session failed",
 			zap.String("result", res.Result),
+			zap.Int("code", res.Code),
 		)
 		return &GetGameSessionFailed{}
 	}
