@@ -9,6 +9,7 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/server/core"
 )
 
@@ -47,7 +48,7 @@ func (state *apiActor) createRoom(c echo.Context) error {
 	future := state.roomManagerPID.RequestFuture(createRoom, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		log.Error("api create room failed: create room failed",
+		logger.L().Error("api create room failed: create room failed",
 			zap.Error(err),
 		)
 		return c.NoContent(http.StatusInternalServerError)
@@ -73,7 +74,7 @@ func (state *apiActor) createSession(c echo.Context) error {
 	}{}
 
 	if err := c.Bind(req); err != nil {
-		log.Error("api create session failed: parse json failed",
+		logger.L().Error("api create session failed: parse json failed",
 			zap.Error(err),
 		)
 		return badRequest(c, &ParseJSONFailed{})
@@ -87,7 +88,7 @@ func (state *apiActor) createSession(c echo.Context) error {
 	future := state.sessionManagerPID.RequestFuture(createSession, Timeout)
 	res, err := future.Result()
 	if err != nil {
-		log.Error("api create session failed: create session failed",
+		logger.L().Error("api create session failed: create session failed",
 			zap.Error(err),
 		)
 		return c.NoContent(http.StatusInternalServerError)

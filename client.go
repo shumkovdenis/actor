@@ -19,8 +19,6 @@ import (
 	"fmt"
 )
 
-var log = logger.Get()
-
 type message struct {
 	Type string      `json:"type"`
 	Data interface{} `json:"data"`
@@ -77,9 +75,9 @@ func connect(d *data) error {
 			msg := message{}
 			err := c.ReadJSON(&msg)
 			if err != nil {
-				log.Fatal("recv error:", zap.Error(err))
+				logger.L().Fatal("recv error:", zap.Error(err))
 			}
-			log.Info(fmt.Sprintf("recv: %v\n", msg))
+			logger.L().Info(fmt.Sprintf("recv: %v\n", msg))
 
 			if nextState, ok := d.Events[msg.Type]; ok {
 				if nextCommand, ok := d.States[nextState]; ok {
@@ -96,14 +94,14 @@ func connect(d *data) error {
 		case msg := <-in:
 			err := c.WriteJSON(&msg)
 			if err != nil {
-				log.Fatal("send error:", zap.Error(err))
+				logger.L().Fatal("send error:", zap.Error(err))
 			}
-			log.Info(fmt.Sprintf("\n---------------\nsend: %v\n", msg))
+			logger.L().Info(fmt.Sprintf("\n---------------\nsend: %v\n", msg))
 		case <-interrupt:
-			log.Info("interrupt")
+			logger.L().Info("interrupt")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Info("close client:", zap.Error(err))
+				logger.L().Info("close client:", zap.Error(err))
 			}
 			select {
 			case <-done:

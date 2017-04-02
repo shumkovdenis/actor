@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 )
 
 func getGameSession(username, password string, gameID string) Message {
@@ -21,7 +22,7 @@ func getGameSession(username, password string, gameID string) Message {
 		}).
 		Post(conf.URL)
 	if err != nil {
-		log.Error("get session failed",
+		logger.L().Error("get session failed",
 			zap.Error(err),
 		)
 		return &GetGameSessionFailed{}
@@ -35,14 +36,14 @@ func getGameSession(username, password string, gameID string) Message {
 		Host        string `json:"host"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
-		log.Error("get session failed",
+		logger.L().Error("get session failed",
 			zap.Error(err),
 		)
 		return &GetGameSessionFailed{}
 	}
 
 	if res.Result == "Error" {
-		log.Error("get session failed",
+		logger.L().Error("get session failed",
 			zap.String("result", res.Result),
 			zap.Int("code", res.Code),
 		)

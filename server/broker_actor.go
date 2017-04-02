@@ -23,6 +23,10 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		pid, _ := ctx.SpawnNamed(props, "conn")
 
 		state.connPID = pid
+	case core.Event:
+		if state.broker.Contains(msg.Event()) {
+			ctx.Parent().Tell(msg)
+		}
 	case *Subscribe:
 		state.broker.AddTopics(msg.Topics)
 
@@ -37,9 +41,5 @@ func (state *brokerActor) Receive(ctx actor.Context) {
 		state.connPID.Tell(msg)
 	case core.Command:
 		state.connPID.Request(msg, ctx.Sender())
-	case core.Event:
-		if state.broker.Contains(msg.Event()) {
-			ctx.Parent().Tell(msg)
-		}
 	}
 }

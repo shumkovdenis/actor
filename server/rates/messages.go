@@ -2,10 +2,7 @@ package rates
 
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/shumkovdenis/club/logger"
 )
-
-var log = logger.Get()
 
 type Message interface {
 	RatesMessage()

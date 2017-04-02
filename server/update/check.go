@@ -6,6 +6,7 @@ import (
 
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 	"go.uber.org/zap"
 )
 
@@ -15,13 +16,13 @@ func check() Message {
 	url := conf.PropsURL()
 	path := conf.PropsPath()
 
-	log.Info("check update",
+	logger.L().Info("check update",
 		zap.String("url", url),
 		zap.String("path", path),
 	)
 
 	if err := os.RemoveAll(conf.UpdatePath()); err != nil {
-		log.Error("remove old update failed",
+		logger.L().Error("remove old update failed",
 			zap.Error(err),
 		)
 		return &CheckFailed{}
@@ -29,7 +30,7 @@ func check() Message {
 
 	req, err := grab.NewRequest(url)
 	if err != nil {
-		log.Error("check update failed",
+		logger.L().Error("check update failed",
 			zap.Error(err),
 		)
 		return &CheckFailed{}
@@ -40,7 +41,7 @@ func check() Message {
 
 	resp, err := grab.DefaultClient.Do(req)
 	if err != nil {
-		log.Error("check update failed",
+		logger.L().Error("check update failed",
 			zap.Error(err),
 		)
 		return &CheckFailed{}
@@ -49,16 +50,16 @@ func check() Message {
 	code := resp.HTTPResponse.StatusCode
 
 	if code == http.StatusOK {
-		log.Info("update available")
+		logger.L().Info("update available")
 		return &Available{}
 	}
 
 	if code == http.StatusNotFound || code == http.StatusForbidden {
-		log.Info("update no")
+		logger.L().Info("update no")
 		return &No{}
 	}
 
-	log.Error("check update failed",
+	logger.L().Error("check update failed",
 		zap.Int("code", code),
 	)
 	return &CheckFailed{}

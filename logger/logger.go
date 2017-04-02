@@ -55,6 +55,6 @@ func InitProduction(file string) {
 	l, _ = conf.Build()
 }
 
-func Get() *zap.Logger {
+func L() *zap.Logger {
 	return l
 }

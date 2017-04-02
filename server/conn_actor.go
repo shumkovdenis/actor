@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/server/core"
 )
 
@@ -28,7 +29,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 		future := state.sessionManagerPID.RequestFuture(getSession, Timeout)
 		res, err := future.Result()
 		if err != nil {
-			log.Error("login failed: get session failed",
+			logger.L().Error("login failed: get session failed",
 				zap.Error(err),
 			)
 			ctx.Respond(&LoginFailed{})
@@ -48,7 +49,7 @@ func (state *connActor) Receive(ctx actor.Context) {
 		future = sessionPID.RequestFuture(useSession, Timeout)
 		res, err = future.Result()
 		if err != nil {
-			log.Error("login failed: use session failed",
+			logger.L().Error("login failed: use session failed",
 				zap.Error(err),
 			)
 			ctx.Respond(&LoginFailed{})
@@ -73,28 +74,26 @@ func (state *connActor) Receive(ctx actor.Context) {
 func (state *connActor) logged(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Stopped:
-		log.Debug("conn stopped")
-
 		future := state.sessionPID.RequestFuture(&FreeSession{}, Timeout)
 		res, err := future.Result()
 		if err != nil {
-			log.Error("conn stopped failed: free session failed",
+			logger.L().Error("conn stopped failed: free session failed",
 				zap.Error(err),
 			)
 			return
 		}
 
 		if _, ok := res.(*FreeSessionSuccess); !ok {
-			log.Error("free session failed")
+			logger.L().Error("free session failed")
 			return
 		}
 
 		ctx.SetBehavior(state.Receive)
+	case core.Event:
+		ctx.Parent().Tell(msg)
 	case *Login:
 		ctx.Respond(&AlreadyLogged{})
 	case core.Command:
 		state.sessionPID.Request(msg, ctx.Sender())
-	case core.Event:
-		ctx.Parent().Tell(msg)
 	}
 }

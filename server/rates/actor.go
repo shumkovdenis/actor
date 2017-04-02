@@ -11,6 +11,7 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 )
 
 type ratesActor struct {
@@ -70,14 +71,14 @@ func rates() Message {
 
 	resp, err := resty.R().Get(conf.URL)
 	if err != nil {
-		log.Error("rates failed",
+		logger.L().Error("rates failed",
 			zap.Error(err),
 		)
 		return &RatesFailed{}
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		log.Error("rates failed",
+		logger.L().Error("rates failed",
 			zap.Int("code", resp.StatusCode()),
 		)
 		return &RatesFailed{}
@@ -85,7 +86,7 @@ func rates() Message {
 
 	res := make([]*Rate, 0)
 	if err = json.Unmarshal(resp.Body(), &res); err != nil {
-		log.Error("rates failed",
+		logger.L().Error("rates failed",
 			zap.Error(err),
 		)
 		return &RatesFailed{}

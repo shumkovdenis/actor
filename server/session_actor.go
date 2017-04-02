@@ -4,8 +4,6 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/shumkovdenis/club/server/account"
 	"github.com/shumkovdenis/club/server/core"
-	"github.com/shumkovdenis/club/server/jackpots/list"
-	"github.com/shumkovdenis/club/server/jackpots/tops"
 	"github.com/shumkovdenis/club/server/rates"
 	"github.com/shumkovdenis/club/server/update"
 )
@@ -53,6 +51,8 @@ func (state *sessionActor) Receive(ctx actor.Context) {
 
 func (state *sessionActor) used(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
+	case core.Event:
+		state.connPID.Tell(msg)
 	case *UseSession:
 		ctx.Respond(&SessionAlreadyUsed{})
 	case *FreeSession:
@@ -62,32 +62,35 @@ func (state *sessionActor) used(ctx actor.Context) {
 
 		state.ratesPID.Tell(&rates.Leave{ctx.Self()})
 
+		state.accountPID.Tell(&account.StopLiveJackpotsTops{})
+		state.accountPID.Tell(&account.StopLiveJackpotsList{})
+
 		ctx.Respond(&FreeSessionSuccess{})
 
 		ctx.SetBehavior(state.Receive)
 	case *Subscribe:
-		switch true {
-		case msg.Contains(&rates.Rates{}):
+		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Join{ctx.Self()})
-		case msg.Contains(&tops.Tops{}):
-			state.jackpotsTopsPID.Tell(&tops.Join{ctx.Self()})
-		case msg.Contains(&list.List{}):
-			state.jackpotsListPID.Tell(&list.Join{ctx.Self()})
+		}
+		if msg.Contains(&account.JackpotsTops{}) {
+			state.accountPID.Tell(&account.StartLiveJackpotsTops{})
+		}
+		if msg.Contains(&account.JackpotsList{}) {
+			state.accountPID.Tell(&account.StartLiveJackpotsList{})
 		}
 	case *Unsubscribe:
-		switch true {
-		case msg.Contains(&rates.Rates{}):
+		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Leave{ctx.Self()})
-		case msg.Contains(&tops.Tops{}):
-			state.jackpotsTopsPID.Tell(&tops.Leave{ctx.Self()})
-		case msg.Contains(&list.List{}):
-			state.jackpotsListPID.Tell(&list.Leave{ctx.Self()})
+		}
+		if msg.Contains(&account.JackpotsTops{}) {
+			state.accountPID.Tell(&account.StopLiveJackpotsTops{})
+		}
+		if msg.Contains(&account.JackpotsList{}) {
+			state.accountPID.Tell(&account.StopLiveJackpotsList{})
 		}
 	case account.Message:
 		state.accountPID.Request(msg, ctx.Sender())
 	case core.Command:
 		state.roomPID.Request(msg, ctx.Sender())
-	case core.Event:
-		state.connPID.Tell(msg)
 	}
 }

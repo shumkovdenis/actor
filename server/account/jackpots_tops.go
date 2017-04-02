@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,7 @@ func jackpotsTops(username, password string) Message {
 		}).
 		Post(conf.URL)
 	if err != nil {
-		log.Error("jackpots tops failed",
+		logger.L().Error("jackpots tops failed",
 			zap.Error(err),
 		)
 		return &GetJackpotsTopsFailed{}
@@ -35,14 +36,14 @@ func jackpotsTops(username, password string) Message {
 		} `json:"jackpots"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
-		log.Error("jackpots tops failed",
+		logger.L().Error("jackpots tops failed",
 			zap.Error(err),
 		)
 		return &GetJackpotsTopsFailed{}
 	}
 
 	if res.Result == "Error" {
-		log.Error("jackpots tops failed",
+		logger.L().Error("jackpots tops failed",
 			zap.String("result", res.Result),
 			zap.Int("code", res.Code),
 		)

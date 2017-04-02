@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,7 @@ func authorize(username, password string) Message {
 		}).
 		Post(conf.URL)
 	if err != nil {
-		log.Error("authorization failed",
+		logger.L().Error("authorization failed",
 			zap.Error(err),
 		)
 		return &AuthorizationFailed{}
@@ -37,14 +38,14 @@ func authorize(username, password string) Message {
 		} `json:"groups"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
-		log.Error("authorization failed",
+		logger.L().Error("authorization failed",
 			zap.Error(err),
 		)
 		return &AuthorizationFailed{}
 	}
 
 	if res.Result == "Error" {
-		log.Error("authorization failed",
+		logger.L().Error("authorization failed",
 			zap.String("result", res.Result),
 			zap.Int("code", res.Code),
 		)

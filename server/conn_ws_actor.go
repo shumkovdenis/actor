@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/gorilla/websocket"
+	"github.com/shumkovdenis/club/logger"
 	"github.com/shumkovdenis/club/server/core"
 	"go.uber.org/zap"
 )
@@ -31,12 +32,12 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 		go state.reader(ctx)
 	case *actor.Stopped:
 		if err := state.conn.Close(); err != nil {
-			log.Error("close websocket connection failed",
+			logger.L().Error("close websocket connection failed",
 				zap.Error(err),
 			)
 		}
 	case core.Event:
-		l := log.With(
+		l := logger.L().With(
 			zap.String("conn", "ws"),
 			zap.String("type", msg.Event()),
 		)
@@ -49,14 +50,14 @@ func (state *wsConnActor) Receive(ctx actor.Context) {
 
 		evt, err := state.conv.FromMessage(msg)
 		if err != nil {
-			log.Error("conv from message failed",
+			logger.L().Error("conv from message failed",
 				zap.Error(err),
 			)
 			return
 		}
 
 		if err := state.conn.WriteJSON(evt); err != nil {
-			log.Error("write websocket failed",
+			logger.L().Error("write websocket failed",
 				zap.Error(err),
 			)
 		}
@@ -70,26 +71,26 @@ func (state *wsConnActor) reader(ctx actor.Context) {
 		cmd := &command{}
 		if err := state.conn.ReadJSON(cmd); err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log.Warn("close websocket",
+				logger.L().Warn("close websocket",
 					zap.Error(err),
 				)
 				return
 			}
-			log.Error("read websocket failed",
+			logger.L().Error("read websocket failed",
 				zap.Error(err),
 			)
 			ctx.Self().Tell(&ConnReadFailed{})
 			continue
 		}
 
-		log.Debug("command",
+		logger.L().Debug("command",
 			zap.String("conn", "ws"),
 			zap.String("type", cmd.Type),
 		)
 
 		msg, err := state.conv.ToMessage(cmd)
 		if err != nil {
-			log.Error("conv to message failed",
+			logger.L().Error("conv to message failed",
 				zap.Error(err),
 			)
 			ctx.Self().Tell(&ConnReadFailed{})

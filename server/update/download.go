@@ -5,6 +5,7 @@ import (
 
 	"github.com/cavaliercoder/grab"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 	"go.uber.org/zap"
 )
 
@@ -17,14 +18,14 @@ func download() chan Message {
 		url := conf.DataURL()
 		path := conf.DataPath()
 
-		log.Info("download update",
+		logger.L().Info("download update",
 			zap.String("url", url),
 			zap.String("path", path),
 		)
 
 		req, err := grab.NewRequest(url)
 		if err != nil {
-			log.Error("download update failed",
+			logger.L().Error("download update failed",
 				zap.Error(err),
 			)
 			ch <- &DownloadFailed{}
@@ -46,7 +47,7 @@ func download() chan Message {
 		}
 
 		if resp.Error != nil {
-			log.Error("download update failed",
+			logger.L().Error("download update failed",
 				zap.Error(err),
 			)
 			ch <- &DownloadFailed{}
@@ -54,7 +55,7 @@ func download() chan Message {
 			return
 		}
 
-		log.Info("download update completed")
+		logger.L().Info("download update completed")
 
 		ch <- &Complete{}
 		close(ch)

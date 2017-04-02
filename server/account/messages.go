@@ -1,11 +1,5 @@
 package account
 
-import (
-	"github.com/shumkovdenis/club/logger"
-)
-
-var log = logger.Get()
-
 type Message interface {
 	AccountMessage()
 }
@@ -170,7 +164,7 @@ func (*GetJackpotsTops) Command() string {
 }
 
 type JackpotsTops struct {
-	Tops []Jackpot
+	Tops []Jackpot `json:"tops"`
 }
 
 func (*JackpotsTops) AccountMessage() {}
@@ -196,9 +190,9 @@ func (*GetJackpotsList) Command() string {
 }
 
 type JackpotsList struct {
-	Large  float64 `json:"large"`
-	Medium float64 `json:"medium"`
-	Small  float64 `json:"small"`
+	Large  string `json:"large"`
+	Medium string `json:"medium"`
+	Small  string `json:"small"`
 }
 
 func (*JackpotsList) AccountMessage() {}
@@ -214,6 +208,22 @@ func (*GetJackpotsListFailed) AccountMessage() {}
 func (*GetJackpotsListFailed) Event() string {
 	return "event.account.jackpots.list.failed"
 }
+
+type StartLiveJackpotsTops struct{}
+
+func (*StartLiveJackpotsTops) AccountMessage() {}
+
+type StopLiveJackpotsTops struct{}
+
+func (*StopLiveJackpotsTops) AccountMessage() {}
+
+type StartLiveJackpotsList struct{}
+
+func (*StartLiveJackpotsList) AccountMessage() {}
+
+type StopLiveJackpotsList struct{}
+
+func (*StopLiveJackpotsList) AccountMessage() {}
 
 type Category struct {
 	Title string `json:"title"`

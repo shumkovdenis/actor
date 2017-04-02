@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-resty/resty"
 	"github.com/shumkovdenis/club/config"
+	"github.com/shumkovdenis/club/logger"
 )
 
 func getBalance(username, password string) Message {
@@ -20,7 +21,7 @@ func getBalance(username, password string) Message {
 		}).
 		Post(conf.URL)
 	if err != nil {
-		log.Error("get balance failed",
+		logger.L().Error("get balance failed",
 			zap.Error(err),
 		)
 		return &GetBalanceFailed{}
@@ -32,14 +33,14 @@ func getBalance(username, password string) Message {
 		Balance float64 `json:"balance"`
 	}{}
 	if err = json.Unmarshal(resp.Body(), res); err != nil {
-		log.Error("get balance failed",
+		logger.L().Error("get balance failed",
 			zap.Error(err),
 		)
 		return &GetBalanceFailed{}
 	}
 
 	if res.Result == "Error" {
-		log.Error("get balance failed",
+		logger.L().Error("get balance failed",
 			zap.String("result", res.Result),
 			zap.Int("code", res.Code),
 		)

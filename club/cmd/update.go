@@ -22,18 +22,17 @@ var updateCmd = &cobra.Command{
 	Long:  `Update.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logger.InitProduction(logFile)
-		log := logger.Get()
 
-		log.Info("start update")
+		logger.L().Info("start update")
 
 		if err := packer.Unpack(updFile, appPath); err != nil {
-			log.Error("unpack failed",
+			logger.L().Error("unpack failed",
 				zap.Error(err),
 			)
 			return err
 		}
 
-		log.Info("unpack complete")
+		logger.L().Info("unpack complete")
 
 		var c *exec.Cmd
 		if runtime.GOOS == "darwin" {
@@ -42,10 +41,10 @@ var updateCmd = &cobra.Command{
 			c = exec.Command(appFile)
 		}
 
-		log.Info("start app")
+		logger.L().Info("start app")
 
 		if err := c.Start(); err != nil {
-			log.Error("start app failed",
+			logger.L().Error("start app failed",
 				zap.Error(err),
 			)
 			return err

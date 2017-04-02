@@ -5,6 +5,7 @@ import (
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/shumkovdenis/club/logger"
 )
 
 type sessionManagerActor struct {
@@ -30,7 +31,7 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 		future := state.roomManagerPID.RequestFuture(getRoom, Timeout)
 		res, err := future.Result()
 		if err != nil {
-			log.Error("create session fail: get room fail",
+			logger.L().Error("create session fail: get room fail",
 				zap.Error(err),
 			)
 			ctx.Respond(&CreateSessionFailed{})
@@ -53,7 +54,7 @@ func (state *sessionManagerActor) Receive(ctx actor.Context) {
 		future = roomPID.RequestFuture(joinRoom, Timeout)
 		res, err = future.Result()
 		if err != nil {
-			log.Error("create session fail: join room fail",
+			logger.L().Error("create session fail: join room fail",
 				zap.Error(err),
 			)
 			ctx.Respond(&CreateSessionFailed{})

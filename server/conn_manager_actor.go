@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
+	"github.com/shumkovdenis/club/logger"
 	"go.uber.org/zap"
 )
 
@@ -61,7 +62,7 @@ func (state *connManagerActor) ws(ctx actor.Context) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		conn, err := state.upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
-			log.Error("create websocket connection failed",
+			logger.L().Error("create websocket connection failed",
 				zap.Error(err),
 			)
 			return err
