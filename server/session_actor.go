@@ -64,6 +64,7 @@ func (state *sessionActor) used(ctx actor.Context) {
 
 		state.accountPID.Tell(&account.StopLiveJackpotsTops{})
 		state.accountPID.Tell(&account.StopLiveJackpotsList{})
+		state.accountPID.Tell(&account.StopLiveBalance{})
 
 		ctx.Respond(&FreeSessionSuccess{})
 
@@ -71,6 +72,9 @@ func (state *sessionActor) used(ctx actor.Context) {
 	case *Subscribe:
 		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Join{ctx.Self()})
+		}
+		if msg.Contains(&account.Balance{}) {
+			state.accountPID.Tell(&account.StartLiveBalance{})
 		}
 		if msg.Contains(&account.JackpotsTops{}) {
 			state.accountPID.Tell(&account.StartLiveJackpotsTops{})
@@ -81,6 +85,9 @@ func (state *sessionActor) used(ctx actor.Context) {
 	case *Unsubscribe:
 		if msg.Contains(&rates.Rates{}) {
 			state.ratesPID.Tell(&rates.Leave{ctx.Self()})
+		}
+		if msg.Contains(&account.Balance{}) {
+			state.accountPID.Tell(&account.StopLiveBalance{})
 		}
 		if msg.Contains(&account.JackpotsTops{}) {
 			state.accountPID.Tell(&account.StopLiveJackpotsTops{})

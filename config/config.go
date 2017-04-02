@@ -54,6 +54,7 @@ func (s *server) WebSocketURL() string {
 type accountAPI struct {
 	URL                  string        `mapstructure:"url" validate:"required,url"`
 	Type                 string        `mapstructure:"type" validate:"eq=ALLIN|eq=BINOPT"`
+	BalanceInterval      time.Duration `mapstructure:"balance_interval" validate:"min=5000"`
 	JackpotsTopsInterval time.Duration `mapstructure:"jackpots_tops_interval" validate:"min=5000"`
 	JackpotsListInterval time.Duration `mapstructure:"jackpots_list_interval" validate:"min=5000"`
 }
@@ -120,6 +121,7 @@ func new() *config {
 			PublicPath: "public",
 		},
 		AccountAPI: &accountAPI{
+			BalanceInterval:      5000,
 			JackpotsTopsInterval: 5000,
 			JackpotsListInterval: 5000,
 		},

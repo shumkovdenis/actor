@@ -209,6 +209,14 @@ func (*GetJackpotsListFailed) Event() string {
 	return "event.account.jackpots.list.failed"
 }
 
+type StartLiveBalance struct{}
+
+func (*StartLiveBalance) AccountMessage() {}
+
+type StopLiveBalance struct{}
+
+func (*StopLiveBalance) AccountMessage() {}
+
 type StartLiveJackpotsTops struct{}
 
 func (*StartLiveJackpotsTops) AccountMessage() {}

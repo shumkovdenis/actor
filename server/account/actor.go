@@ -11,6 +11,7 @@ type accountActor struct {
 	sessionPID         *actor.PID
 	username           string
 	password           string
+	tickerBalance      *time.Ticker
 	tickerJackpotsTops *time.Ticker
 	tickerJackpotsList *time.Ticker
 }
@@ -61,6 +62,10 @@ func (state *accountActor) authorized(ctx actor.Context) {
 	case *GetJackpotsList:
 		res := jackpotsList(state.username, state.password)
 		ctx.Respond(res)
+	case *StartLiveBalance:
+		state.startLiveBalance()
+	case *StopLiveBalance:
+		state.stopLiveBalance()
 	case *StartLiveJackpotsTops:
 		state.startLiveJackpotsTops()
 	case *StopLiveJackpotsTops:
@@ -69,6 +74,30 @@ func (state *accountActor) authorized(ctx actor.Context) {
 		state.startLiveJackpotsList()
 	case *StopLiveJackpotsList:
 		state.stopLiveJackpotsList()
+	}
+}
+
+func (state *accountActor) startLiveBalance() {
+	if state.tickerBalance != nil {
+		return
+	}
+
+	conf := config.AccountAPI()
+
+	state.tickerBalance = time.NewTicker(conf.BalanceInterval * time.Millisecond)
+
+	go func() {
+		for _ = range state.tickerBalance.C {
+			res := getBalance(state.username, state.password)
+			state.sessionPID.Tell(res)
+		}
+	}()
+}
+
+func (state *accountActor) stopLiveBalance() {
+	if state.tickerBalance != nil {
+		state.tickerBalance.Stop()
+		state.tickerBalance = nil
 	}
 }
 
